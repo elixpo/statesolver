@@ -19,6 +19,19 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Command {
+    /// Record a program into a `.ss` trace (Linux x86-64).
+    #[cfg(target_os = "linux")]
+    Record {
+        /// Output trace.
+        #[arg(short, long, default_value = "trace.ss")]
+        out: PathBuf,
+        /// File to use as the program's stdin.
+        #[arg(long)]
+        stdin: Option<PathBuf>,
+        /// Program and its arguments.
+        #[arg(required = true, trailing_var_arg = true, allow_hyphen_values = true)]
+        command: Vec<String>,
+    },
     /// Inspect, check, and convert `.ss` traces.
     #[command(subcommand)]
     Trace(TraceCmd),
@@ -94,6 +107,12 @@ fn main() -> ExitCode {
 
 fn run(cli: Cli) -> Result<ExitCode> {
     match cli.command {
+        #[cfg(target_os = "linux")]
+        Command::Record {
+            out,
+            stdin,
+            command,
+        } => record(&out, stdin, command),
         Command::Trace(TraceCmd::Validate { path, max_errors }) => validate(&path, max_errors),
         Command::Trace(TraceCmd::Stats { path }) => stats(&path),
         Command::Trace(TraceCmd::Convert { input, output, to }) => {
@@ -330,6 +349,42 @@ fn lifetime(addr: &str, trace: &Path, event: Option<u64>, json: bool) -> Result<
             ),
             Resolution::Unknown => println!("  At E{e}: not a known heap object"),
         }
+    }
+    Ok(ExitCode::SUCCESS)
+}
+
+#[cfg(target_os = "linux")]
+fn record(out: &Path, stdin: Option<PathBuf>, command: Vec<String>) -> Result<ExitCode> {
+    let mut it = command.into_iter();
+    let program = PathBuf::from(it.next().context("missing program")?);
+    let opts = statesolver_record::Options {
+        program,
+        args: it.collect(),
+        stdin,
+        out: out.to_path_buf(),
+    };
+    let s = statesolver_record::record(&opts).context("recording")?;
+    eprintln!(
+        "recorded {} events to {}: {} syscalls, {} allocations, {} frees, {} marks; {}",
+        s.events,
+        out.display(),
+        s.syscalls,
+        s.allocations,
+        s.frees,
+        s.marks,
+        s.outcome
+    );
+    if !s.uncaptured.is_empty() {
+        eprintln!(
+            "warning: syscalls without an output model (replay cannot inject them): {:?}",
+            s.uncaptured
+        );
+    }
+    if s.frees_untracked > 0 {
+        eprintln!(
+            "note: {} frees of pointers allocated before the entry point",
+            s.frees_untracked
+        );
     }
     Ok(ExitCode::SUCCESS)
 }

@@ -19,5 +19,8 @@ serde_json.workspace = true
 statesolver-analysis.workspace = true
 statesolver-trace.workspace = true
 
+[target.'cfg(target_os = "linux")'.dependencies]
+statesolver-record.workspace = true
+
 [lints]
 workspace = true

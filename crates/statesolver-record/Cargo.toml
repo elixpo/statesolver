@@ -8,5 +8,19 @@ license.workspace = true
 repository.workspace = true
 homepage.workspace = true
 
-[lints]
-workspace = true
+[target.'cfg(target_os = "linux")'.dependencies]
+nix.workspace = true
+object.workspace = true
+serde.workspace = true
+statesolver-trace.workspace = true
+thiserror.workspace = true
+
+# The recorder is the one crate allowed `unsafe` (process creation and
+# siginfo access); `lib.rs` sets `deny(unsafe_code)` and each block carries a
+# SAFETY comment. Clippy and the other rustc lints still follow the workspace.
+[lints.clippy]
+all = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+
+[dev-dependencies]
+statesolver-trace.workspace = true
