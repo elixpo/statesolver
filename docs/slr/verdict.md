@@ -35,3 +35,11 @@ Each ingredient does exist somewhere. The gap is real but narrow, so the claim m
 
 - A dedicated **asymmetric-MTS** reference was not found. Borodin, Linial & Saks give O(|S|²) for non-symmetric distances, and Fiat & Mendel cover unfair MTS. Search further before claiming bounds.
 - Unverified details are flagged in the matrix: Kumar et al. (content), the Shao & Appel DOI, authorship of the Go and Rust posts, the Cog VM heap→stack details, the authors of the 2025 RDMA coroutine study, and the authors of Libfork.
+
+## Update 2026-11-04: patent check resolved
+
+Condition (2) is cleared. The independent claims of US 10,908,910 B2 and US 11,726,786 B2 (claims 1, 8, and 15 of each) cover generating a runtime-managed stack, copying a first subset of frames to the OS-managed stack, installing a return-barrier address, and lazily copying further subsets when execution returns through the barrier. Dependent claims add how a subset is selected (metadata address, single frame, bottom-most frame's return address) and preservation of return values.
+
+"The number of frames to include in a subset may be adaptive", which may depend on factors such as current CPU load, appears **only in the description, not in the claims**. It concerns how many frames are copied within one stack↔native-stack scheme. Neither patent claims or describes choosing among representations by cost, or any comparison with an offline or hindsight-optimal policy.
+
+**Remaining condition:** (1), a native Google Scholar and ACM DL re-run with forward citations. This needs a human, because Scholar blocks automated queries.
