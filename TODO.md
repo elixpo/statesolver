@@ -37,7 +37,7 @@ Findings go in [DISCOVERIES.md](DISCOVERIES.md).
 - [x] Provenance chain (`statesolver-replay::provenance`): alternates register producers and memory last-writers back to an allocation return, syscall input, or constant. On bug 001 the stale pointer resolves to **allocation #0 epoch 1** while the address belongs to **#1 epoch 2** (6 hops, tested)
 - [x] `explain-crash` with the uniform write rule (pointer origin against owner at write time gives UAF-reuse, UAF, OOB, or in-bounds) and FACT/INFERENCE evidence IDs; `--address-only` gives arm A5
 - [x] Ground truth: 001 → use-after-free with address reuse, 002 → double free (the aliasing copy appears in the pointer chain), 003 → heap buffer overflow, with the value traced to `read()` input. The address-only mode does not reach the UAF conclusion on 001. All tested
-- [ ] `origin <addr|reg> --event` and `why <reg|addr> --event` CLI commands over the same engine
+- [x] `why --event E --reg R | --addr A`: provenance chain plus allocation origin, flagging dangling pointers
 - [x] Provenance through SIMD copies (vector store → vector load → source bytes at the matching offset) and through syscall writes (kernel writes appear as watchpoint hits on `syscall`)
 - [ ] `rep movs` copies; FS/GS-relative addresses; values in static data labelled as such
 - [ ] Temporal object graph; address-only switch (arm A5)

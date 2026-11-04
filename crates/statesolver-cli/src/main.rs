@@ -44,6 +44,25 @@ enum Command {
         #[arg(long)]
         force: bool,
     },
+    /// Where did a value come from? Provenance chain of a register or memory
+    /// location at an indexed event, with the allocation it belongs to.
+    #[cfg(target_os = "linux")]
+    Why {
+        /// rr trace directory.
+        trace: PathBuf,
+        /// StateSolver event id (position to ask at).
+        #[arg(long)]
+        event: u64,
+        /// Register to explain (for example `rax`).
+        #[arg(long, conflicts_with = "addr")]
+        reg: Option<String>,
+        /// Memory address to explain (8 bytes).
+        #[arg(long)]
+        addr: Option<String>,
+        /// Emit JSON.
+        #[arg(long)]
+        json: bool,
+    },
     /// Explain the recorded crash: classification plus a cited evidence chain.
     #[cfg(target_os = "linux")]
     ExplainCrash {
@@ -157,6 +176,14 @@ fn run(cli: Cli) -> Result<ExitCode> {
                 record_rr(&out, stdin, &command)
             }
         }
+        #[cfg(target_os = "linux")]
+        Command::Why {
+            trace,
+            event,
+            reg,
+            addr,
+            json,
+        } => why(&trace, event, reg.as_deref(), addr.as_deref(), json),
         #[cfg(target_os = "linux")]
         Command::ExplainCrash {
             trace,
@@ -648,6 +675,68 @@ fn explain_crash(trace: &Path, address_only: bool, json: bool) -> Result<ExitCod
             }
             println!("  origin: {}", serde_json::to_string(&c.origin)?);
         }
+    }
+    Ok(ExitCode::SUCCESS)
+}
+
+#[cfg(target_os = "linux")]
+fn why(
+    trace: &Path,
+    event: u64,
+    reg: Option<&str>,
+    addr: Option<&str>,
+    json: bool,
+) -> Result<ExitCode> {
+    use statesolver_replay::provenance::{Carrier, Origin};
+    let index_path = index(trace, false)?;
+    let events: Vec<statesolver_trace::Event> =
+        statesolver_trace::open(&index_path)?.collect::<std::result::Result<_, _>>()?;
+    let at = events
+        .iter()
+        .find(|e| e.id.0 == event)
+        .and_then(|e| e.rr)
+        .with_context(|| format!("no event E{event} with an rr position"))?;
+    let start = match (reg, addr) {
+        (Some(r), _) => Carrier::Reg {
+            reg: statesolver_trace::Reg::from_name(r)
+                .with_context(|| format!("unknown register {r}"))?,
+        },
+        (None, Some(a)) => Carrier::Mem {
+            addr: parse_addr(a)? & !7,
+            len: 8,
+        },
+        (None, None) => anyhow::bail!("give --reg or --addr"),
+    };
+    let mut s = statesolver_replay::Session::start(Some(trace)).context("starting rr replay")?;
+    let chain = statesolver_replay::provenance::trace(&mut s, &events, start, at, 16, 4096)?;
+    if json {
+        println!("{}", serde_json::to_string_pretty(&chain)?);
+        return Ok(ExitCode::SUCCESS);
+    }
+    println!("{start:?} at E{event}:");
+    for h in &chain.hops {
+        println!(
+            "  {:#014x}  {:<36} rr {}:{}",
+            h.pos.pc, h.insn.text, h.pos.event, h.pos.ticks
+        );
+    }
+    match &chain.origin {
+        Origin::Allocation {
+            alloc, epoch, addr, ..
+        } => {
+            println!(
+                "  origin: returned by Allocation #{} (epoch {}) at {addr:#x}",
+                alloc.0, epoch.0
+            );
+            let freed = statesolver_replay::explain::freed_before(&events, *alloc, at);
+            if let Some(f) = freed {
+                println!(
+                    "  note:   Allocation #{} was already freed at E{} - this value is a dangling pointer at E{event}",
+                    alloc.0, f.id.0
+                );
+            }
+        }
+        other => println!("  origin: {}", serde_json::to_string(other)?),
     }
     Ok(ExitCode::SUCCESS)
 }

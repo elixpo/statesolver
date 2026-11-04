@@ -136,7 +136,7 @@ fn next_carrier(
 ) -> Result<Option<Carrier>> {
     if insn.text.starts_with("lea") {
         return Ok(to_reg(ins.memory_base())
-            .filter(|r| !matches!(r, Reg::Rsp | Reg::Rbp))
+            .filter(|r| !matches!(r, Reg::Rsp | Reg::Rbp | Reg::Rip))
             .map(|reg| Carrier::Reg { reg }));
     }
     if let Some((addr, len)) = mem_operand(s, ins)? {
