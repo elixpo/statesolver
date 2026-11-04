@@ -6,6 +6,23 @@ MorphStack's log is archived at [docs/archive/morphstack/DISCOVERIES.md](docs/ar
 
 ---
 
+## 2026-11-04: rr backend works; allocation epochs derived during replay match the fixture recorder exactly
+
+- **Finding:** `statesolver record` (an rr wrapper) followed by `statesolver index` (one replay pass breaking on the allocator) reproduces the fixture recorder's results on every corpus bug:
+  - 001: 3 allocations, 1 free, reuse at epochs 1→2, SIGSEGV;
+  - 002: 5 allocations, 6 frees, the double free flagged, SIGABRT;
+  - 003: 2 allocations, SIGSEGV.
+
+  Indexing takes about 0.12 s per bug, and every derived event carries its rr event number, so queries can replay to it.
+- **rr protocol facts learned (all handled in `statesolver-replay`):**
+  1. rr does **not** step over software breakpoints on continue. The client must remove the breakpoint, single-step, and re-insert it.
+  2. After a breakpoint stop, `rip` equals the breakpoint address (no +1).
+  3. rr does not report library load addresses, but the replay process is rr's real child, and its `/proc/<pid>/maps` show the recorded library paths. Its `/proc/<pid>/exe` is `rr_exec_stub`, so find the executable through its mapping.
+  4. `qRRCmd:when:-1` returns the hex text `Completed event: N`.
+  5. After replaying a fatal signal, rr delivers its own SIGKILL, then reports an exit. The last fault signal before the end is the death.
+  6. rr records with ASLR on, so heap addresses differ between recordings, though not between replays of one recording.
+- **Lesson:** `pkill -f "rr replay"` matches the shell running it, and a stale rr server held the probe socket. Always kill rr by PID.
+
 ## 2026-11-04: Direction locked: rr-backed crash explainer, and an agent study as the paper
 
 - **Scrutiny:** [docs/slr/agent-paper-scrutiny.md](docs/slr/agent-paper-scrutiny.md). Closest threats:

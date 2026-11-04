@@ -1,6 +1,6 @@
 [package]
 name = "statesolver-replay"
-description = "StateSolver checkpoints, deterministic replay, and historical state"
+description = "StateSolver rr replay driver, historical state, and on-demand allocation epochs"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -8,5 +8,15 @@ license.workspace = true
 repository.workspace = true
 homepage.workspace = true
 
+[target.'cfg(target_os = "linux")'.dependencies]
+object.workspace = true
+serde.workspace = true
+statesolver-record.workspace = true
+statesolver-trace.workspace = true
+thiserror.workspace = true
+
 [lints]
 workspace = true
+
+[dev-dependencies]
+statesolver-trace.workspace = true

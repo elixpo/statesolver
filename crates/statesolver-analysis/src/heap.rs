@@ -200,6 +200,7 @@ mod tests {
     fn alloc(id: u64, a: u64, addr: u64, size: u64, epoch: u32) -> Result<Event, ()> {
         Ok(Event {
             id: EventId(id),
+            rr_event: None,
             kind: EventKind::Alloc {
                 alloc: AllocId(a),
                 addr,
@@ -214,6 +215,7 @@ mod tests {
     fn free(id: u64, a: u64, addr: u64, epoch: u32) -> Result<Event, ()> {
         Ok(Event {
             id: EventId(id),
+            rr_event: None,
             kind: EventKind::Free {
                 alloc: AllocId(a),
                 addr,

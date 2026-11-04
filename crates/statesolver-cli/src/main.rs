@@ -22,15 +22,27 @@ enum Command {
     /// Record a program into a `.ss` trace (Linux x86-64).
     #[cfg(target_os = "linux")]
     Record {
-        /// Output trace.
-        #[arg(short, long, default_value = "trace.ss")]
+        /// Output: an rr trace directory (default), or a `.ss` file with `--fixture`.
+        #[arg(short, long, default_value = "trace")]
         out: PathBuf,
+        /// Use the built-in ptrace recorder (test fixture) instead of rr.
+        #[arg(long)]
+        fixture: bool,
         /// File to use as the program's stdin.
         #[arg(long)]
         stdin: Option<PathBuf>,
         /// Program and its arguments.
         #[arg(required = true, trailing_var_arg = true, allow_hyphen_values = true)]
         command: Vec<String>,
+    },
+    /// Derive the allocation index of an rr trace by replaying it (cached in the trace directory).
+    #[cfg(target_os = "linux")]
+    Index {
+        /// rr trace directory.
+        trace: PathBuf,
+        /// Rebuild even if a cached index exists.
+        #[arg(long)]
+        force: bool,
     },
     /// Inspect, check, and convert `.ss` traces.
     #[command(subcommand)]
@@ -110,9 +122,21 @@ fn run(cli: Cli) -> Result<ExitCode> {
         #[cfg(target_os = "linux")]
         Command::Record {
             out,
+            fixture,
             stdin,
             command,
-        } => record(&out, stdin, command),
+        } => {
+            if fixture {
+                record(&out, stdin, command)
+            } else {
+                record_rr(&out, stdin, &command)
+            }
+        }
+        #[cfg(target_os = "linux")]
+        Command::Index { trace, force } => {
+            index(&trace, force)?;
+            Ok(ExitCode::SUCCESS)
+        }
         Command::Trace(TraceCmd::Validate { path, max_errors }) => validate(&path, max_errors),
         Command::Trace(TraceCmd::Stats { path }) => stats(&path),
         Command::Trace(TraceCmd::Convert { input, output, to }) => {
@@ -138,11 +162,80 @@ fn run(cli: Cli) -> Result<ExitCode> {
 }
 
 fn open(path: &Path) -> Result<statesolver_trace::TraceReader> {
-    statesolver_trace::open(path).with_context(|| format!("reading {}", path.display()))
+    let path = resolve_trace(path)?;
+    statesolver_trace::open(&path).with_context(|| format!("reading {}", path.display()))
+}
+
+/// The cached allocation index inside an rr trace directory.
+const INDEX_FILE: &str = "statesolver-index.ss";
+
+/// A `.ss` file, or an rr trace directory (indexed on demand).
+fn resolve_trace(path: &Path) -> Result<PathBuf> {
+    if path.is_dir() {
+        #[cfg(target_os = "linux")]
+        return index(path, false);
+        #[cfg(not(target_os = "linux"))]
+        anyhow::bail!("indexing rr traces requires Linux");
+    }
+    Ok(path.to_path_buf())
 }
 
 fn heap(path: &Path) -> Result<TemporalHeap> {
     TemporalHeap::from_events(open(path)?).with_context(|| format!("decoding {}", path.display()))
+}
+
+#[cfg(target_os = "linux")]
+fn index(trace: &Path, force: bool) -> Result<PathBuf> {
+    let out = trace.join(INDEX_FILE);
+    if out.exists() && !force {
+        return Ok(out);
+    }
+    eprintln!("indexing {} (replaying once)...", trace.display());
+    let started = std::time::Instant::now();
+    let mut session =
+        statesolver_replay::Session::start(Some(trace)).context("starting rr replay")?;
+    let (header, events, s) =
+        statesolver_replay::index::build(&mut session).context("replaying")?;
+    drop(session);
+    let mut w = statesolver_trace::create(&out, &header)?;
+    for e in &events {
+        w.write(e)?;
+    }
+    w.finish()?;
+    eprintln!(
+        "indexed in {:.2}s: {} allocations, {} frees, {} marks, {} stops; {} -> {}",
+        started.elapsed().as_secs_f64(),
+        s.allocations,
+        s.frees,
+        s.marks,
+        s.stops,
+        s.outcome,
+        out.display()
+    );
+    Ok(out)
+}
+
+fn record_rr(out: &Path, stdin: Option<PathBuf>, command: &[String]) -> Result<ExitCode> {
+    anyhow::ensure!(!out.exists(), "{} already exists", out.display());
+    let paranoid =
+        std::fs::read_to_string("/proc/sys/kernel/perf_event_paranoid").unwrap_or_default();
+    if paranoid.trim().parse::<i32>().is_ok_and(|p| p > 1) {
+        eprintln!(
+            "warning: kernel.perf_event_paranoid = {}; rr needs <= 1 (sudo sysctl kernel.perf_event_paranoid=1)",
+            paranoid.trim()
+        );
+    }
+    let mut cmd = std::process::Command::new("rr");
+    cmd.arg("record").arg("-o").arg(out).args(command);
+    if let Some(path) = stdin {
+        cmd.stdin(
+            std::fs::File::open(&path).with_context(|| format!("opening {}", path.display()))?,
+        );
+    }
+    let status = cmd.status().context("running rr (is it installed?)")?;
+    anyhow::ensure!(out.is_dir(), "rr did not produce a trace (status {status})");
+    eprintln!("recorded {} (program status {status})", out.display());
+    Ok(ExitCode::SUCCESS)
 }
 
 fn parse_addr(s: &str) -> Result<u64> {

@@ -552,6 +552,7 @@ dependencies = [
  "serde_json",
  "statesolver-analysis",
  "statesolver-record",
+ "statesolver-replay",
  "statesolver-trace",
 ]
 
@@ -573,6 +574,13 @@ dependencies = [
 [[package]]
 name = "statesolver-replay"
 version = "0.1.0"
+dependencies = [
+ "object",
+ "serde",
+ "statesolver-record",
+ "statesolver-trace",
+ "thiserror",
+]
 
 [[package]]
 name = "statesolver-trace"

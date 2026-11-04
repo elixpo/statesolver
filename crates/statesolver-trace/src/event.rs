@@ -243,6 +243,10 @@ pub struct MemWrite {
 pub struct Event {
     /// Global ordinal: 0, 1, 2, … with no gaps.
     pub id: EventId,
+    /// rr event number at which this happened, when the trace indexes an rr
+    /// recording. Queries replay to this position.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rr_event: Option<u64>,
     /// What happened.
     #[serde(flatten)]
     pub kind: EventKind,
@@ -346,6 +350,18 @@ pub enum EventKind {
         /// Exit status.
         code: i32,
     },
+}
+
+impl Event {
+    /// An event without an rr position.
+    #[must_use]
+    pub fn new(id: EventId, kind: EventKind) -> Self {
+        Self {
+            id,
+            rr_event: None,
+            kind,
+        }
+    }
 }
 
 impl EventKind {

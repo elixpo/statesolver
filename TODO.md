@@ -21,10 +21,11 @@ Findings go in [DISCOVERIES.md](DISCOVERIES.md).
 - [x] Reference ptrace recorder (now a fixture): syscall models, vDSO patching, TSC trapping, refusal of threads and forks, corpus tests
 - [x] Overhead measured: about 50 µs per allocation against rr at 0.04 s per 100k, so rr becomes the backend
 - [x] rr feasibility: bug 001 records and replays; reverse-continue with a watchpoint finds the stale writer
-- [ ] `statesolver record` as an rr wrapper (PMU and `perf_event_paranoid` checks, `--stdin`)
-- [ ] Replay driver over the gdb remote serial protocol (continue and reverse-continue, step, breakpoints, watchpoints, registers and memory, `when`)
+- [x] `statesolver record` as an rr wrapper (`-o` trace directory, `--stdin`, `perf_event_paranoid` warning); the old recorder is reachable as `--fixture`
+- [x] Replay driver (`statesolver-replay`): RSP client in no-ack mode; continue, reverse-continue, step, reverse-step; software breakpoints and hardware write watchpoints; registers, memory, `when`; replay-process maps
 - [ ] Map rr positions to event IDs
-- [ ] On-demand allocation epochs from one replay pass, cached; cross-checked against the fixture recorder
+- [x] On-demand allocation epochs: `statesolver index` replays once (about 0.12 s per corpus bug), caches `statesolver-index.ss` in the trace directory, and every event carries `rr_event`. Matches the fixture recorder on all 3 bugs; rr corpus tests are in the suite
+- [ ] Index cost on allocation-heavy programs (each allocator call is a replay breakpoint stop)
 - [ ] Historical state: regs, memory, maps, stack at an event
 - [ ] CI runner with PMU access (GitHub-hosted runners may lack a vPMU)
 

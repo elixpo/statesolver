@@ -40,6 +40,7 @@ object = { version = "0.40", default-features = false, features = ["read", "std"
 statesolver-trace = { path = "crates/statesolver-trace" }
 statesolver-analysis = { path = "crates/statesolver-analysis" }
 statesolver-record = { path = "crates/statesolver-record" }
+statesolver-replay = { path = "crates/statesolver-replay" }
 
 [profile.release]
 lto = "thin"
