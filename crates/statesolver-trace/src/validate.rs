@@ -229,6 +229,7 @@ impl Validator {
             EventKind::Syscall { .. }
             | EventKind::Signal { .. }
             | EventKind::Mark { .. }
+            | EventKind::Nondet { .. }
             | EventKind::Exit { .. } => {}
         }
         out

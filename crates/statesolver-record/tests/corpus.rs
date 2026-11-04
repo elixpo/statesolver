@@ -147,3 +147,86 @@ fn overflow_captures_external_input() {
     assert_eq!(stdin_reads[1].len(), 48);
     assert_eq!(count(&kinds, "alloc"), 2);
 }
+
+fn build_program(name: &str, extra: &[&str]) -> Option<PathBuf> {
+    let src = Path::new(env!("CARGO_MANIFEST_DIR")).join(format!("tests/programs/{name}.c"));
+    let out = std::env::temp_dir().join(format!("statesolver-prog-{name}-{}", std::process::id()));
+    let ok = Command::new("gcc")
+        .args(["-O0", "-g", "-o"])
+        .arg(&out)
+        .arg(&src)
+        .args(extra)
+        .status()
+        .ok()?
+        .success();
+    ok.then_some(out)
+}
+
+fn record_program(bin: PathBuf) -> Result<Vec<EventKind>, statesolver_record::Error> {
+    let out = bin.with_extension("ss");
+    let opts = statesolver_record::Options {
+        program: bin,
+        args: vec![],
+        stdin: None,
+        out: out.clone(),
+    };
+    statesolver_record::record(&opts)?;
+    let kinds = statesolver_trace::open(&out)
+        .unwrap()
+        .map(|e| e.unwrap().kind)
+        .collect();
+    let _ = std::fs::remove_file(out);
+    Ok(kinds)
+}
+
+#[test]
+fn vdso_time_and_tsc_become_recorded_events() {
+    let Some(bin) = build_program("timing", &[]) else {
+        return;
+    };
+    let kinds = match record_program(bin) {
+        Ok(k) => k,
+        Err(e) => {
+            eprintln!("skipping: {e}");
+            return;
+        }
+    };
+    let syscall = |nr: u64, len: usize| {
+        kinds.iter().any(|k| {
+            matches!(k, EventKind::Syscall { nr: n, writes, .. }
+            if *n == nr && writes.first().is_some_and(|w| w.data.0.len() == len))
+        })
+    };
+    assert!(syscall(228, 16), "clock_gettime not recorded as a syscall");
+    assert!(syscall(96, 16), "gettimeofday not recorded as a syscall");
+    assert!(
+        kinds
+            .iter()
+            .any(|k| matches!(k, EventKind::Syscall { nr: 201, .. })),
+        "time()"
+    );
+    let insns: Vec<&str> = kinds
+        .iter()
+        .filter_map(|k| match k {
+            EventKind::Nondet { insn, .. } => Some(insn.as_str()),
+            _ => None,
+        })
+        .collect();
+    assert!(
+        insns.contains(&"rdtsc") && insns.contains(&"rdtscp"),
+        "{insns:?}"
+    );
+    assert!(matches!(kinds.last(), Some(EventKind::Exit { code: 0 })));
+}
+
+#[test]
+fn threads_are_refused_clearly() {
+    let Some(bin) = build_program("thread", &["-pthread"]) else {
+        return;
+    };
+    match record_program(bin) {
+        Err(statesolver_record::Error::Unsupported(msg)) => assert!(msg.contains("clone"), "{msg}"),
+        Err(e) => eprintln!("skipping: {e}"),
+        Ok(_) => panic!("a threaded program must not record silently"),
+    }
+}

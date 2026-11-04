@@ -18,8 +18,13 @@
 //!
 //! ASLR is disabled for the tracee, so addresses are stable between runs.
 //!
-//! Limits (v0): single-threaded tracees only (`clone` of threads is not
-//! followed), no `vfork`/`fork` children, no `rdtsc`/`rdrand` trapping yet.
+//! Determinism: `rdtsc`/`rdtscp` are made to fault (`PR_SET_TSC`) and are
+//! emulated and recorded as `nondet` events, and the vDSO time functions are
+//! patched into real `syscall` stubs so their results are recorded.
+//!
+//! Limits (v0): single-threaded tracees only. `clone`, `fork`, `vfork`,
+//! `clone3`, and a second `execve` stop the recording with
+//! [`Error::Unsupported`]. `rdrand`/`rdseed` are not trapped yet.
 
 #![cfg(target_os = "linux")]
 #![deny(unsafe_code)]
@@ -100,6 +105,9 @@ pub enum Error {
     /// Unexpected tracee state.
     #[error("{0}")]
     Protocol(String),
+    /// The program does something v0 cannot record faithfully.
+    #[error("unsupported in v0: {0}")]
+    Unsupported(String),
 }
 
 /// Convenience alias.
@@ -322,6 +330,74 @@ impl<W: std::io::Write> Recorder<W> {
         self.insert_bp(entry_rt, BpKind::Entry)
     }
 
+    /// If the tracee faulted on `rdtsc`/`rdtscp` (made to fault by
+    /// `PR_SET_TSC`), execute it on the tracer's behalf, record the result,
+    /// and skip the instruction. Returns whether it was handled.
+    fn try_emulate_tsc(&mut self) -> Result<bool> {
+        let mut regs = ptrace::getregs(self.pid)?;
+        let code = self.read_mem(regs.rip, 3);
+        let (insn, len) = match code.as_slice() {
+            [0x0f, 0x31, ..] => ("rdtsc", 2),
+            [0x0f, 0x01, 0xf9] => ("rdtscp", 3),
+            _ => return Ok(false),
+        };
+        // SAFETY: rdtsc is available on every x86-64 CPU and has no memory
+        // effects; the tracer itself is not TSC-restricted.
+        #[allow(unsafe_code)]
+        let tsc = unsafe { core::arch::x86_64::_rdtsc() };
+        let pc = regs.rip;
+        regs.rax = tsc & 0xffff_ffff;
+        regs.rdx = tsc >> 32;
+        let mut values = vec![(Reg::Rax, regs.rax), (Reg::Rdx, regs.rdx)];
+        if insn == "rdtscp" {
+            regs.rcx = 0;
+            values.push((Reg::Rcx, 0));
+        }
+        regs.rip += len;
+        ptrace::setregs(self.pid, regs)?;
+        self.emit(EventKind::Nondet {
+            pc,
+            insn: insn.to_owned(),
+            values,
+        })?;
+        Ok(true)
+    }
+
+    /// Replace the vDSO time functions with `mov eax, NR; syscall; ret` so
+    /// their results go through recorded syscalls instead of reading the
+    /// kernel's shared time page (as rr does).
+    fn patch_vdso(&mut self, maps: &[symbols::MapLine]) -> Result<()> {
+        let Some(vdso) = maps.iter().find(|m| m.path.as_deref() == Some("[vdso]")) else {
+            return Ok(());
+        };
+        let image = self.read_mem(vdso.start, vdso.end - vdso.start);
+        let Ok(file) = object::File::parse(&*image) else {
+            return Ok(());
+        };
+        let first_vaddr = object::Object::segments(&file)
+            .map(|s| object::ObjectSegment::address(&s))
+            .min()
+            .unwrap_or(0);
+        for sym in object::Object::dynamic_symbols(&file) {
+            let Ok(name) = object::ObjectSymbol::name(&sym) else {
+                continue;
+            };
+            let nr: u32 = match name.trim_start_matches("__vdso_") {
+                "clock_gettime" => 228,
+                "gettimeofday" => 96,
+                "time" => 201,
+                "clock_getres" => 229,
+                "getcpu" => 309,
+                _ => continue,
+            };
+            let addr = vdso.start + object::ObjectSymbol::address(&sym) - first_vaddr;
+            let n = nr.to_le_bytes();
+            let stub = [0xb8, n[0], n[1], n[2], n[3], 0x0f, 0x05, 0xc3];
+            ptrace::write(self.pid, addr as *mut c_void, i64::from_le_bytes(stub))?;
+        }
+        Ok(())
+    }
+
     /// At the entry point every `DT_NEEDED` library is mapped: plant allocator
     /// and marker breakpoints.
     fn at_entry(&mut self) -> Result<()> {
@@ -329,6 +405,7 @@ impl<W: std::io::Write> Recorder<W> {
             "/proc/{}/maps",
             self.pid
         ))?);
+        self.patch_vdso(&maps)?;
         let names: Vec<&str> = ALLOCATOR_SYMBOLS
             .iter()
             .map(|(n, _)| *n)
@@ -663,6 +740,18 @@ impl<W: std::io::Write> Recorder<W> {
                         self.on_syscall_exit(nr, args)?;
                     } else {
                         let r = ptrace::getregs(self.pid)?;
+                        if let Some(what) = match r.orig_rax {
+                            56 | 435 => Some("clone/clone3 (threads or child processes)"),
+                            57 | 58 => Some("fork/vfork (child processes)"),
+                            59 | 322 => Some("a second execve/execveat"),
+                            _ => None,
+                        } {
+                            let _ = nix::sys::signal::kill(self.pid, Signal::SIGKILL);
+                            return Err(Error::Unsupported(format!(
+                                "the program called {what} at {:#x}",
+                                r.rip.wrapping_sub(2)
+                            )));
+                        }
                         self.in_syscall =
                             Some((r.orig_rax, [r.rdi, r.rsi, r.rdx, r.r10, r.r8, r.r9]));
                     }
@@ -675,6 +764,7 @@ impl<W: std::io::Write> Recorder<W> {
                         self.step_over(addr)?;
                     }
                 }
+                WaitStatus::Stopped(_, Signal::SIGSEGV) if self.try_emulate_tsc()? => {}
                 WaitStatus::Stopped(_, sig) => {
                     let info = ptrace::getsiginfo(self.pid)?;
                     let fault = matches!(
@@ -746,12 +836,16 @@ pub fn record(opts: &Options) -> Result<Summary> {
         cmd.stdin(Stdio::from(std::fs::File::open(path)?));
     }
     // SAFETY: the closure runs in the forked child before exec and calls only
-    // async-signal-safe syscalls (personality, ptrace); it allocates nothing.
+    // async-signal-safe syscalls (personality, prctl, ptrace); it allocates nothing.
     #[allow(unsafe_code)]
     unsafe {
         cmd.pre_exec(|| {
             nix::sys::personality::set(nix::sys::personality::Persona::ADDR_NO_RANDOMIZE)
                 .map_err(std::io::Error::from)?;
+            // Make rdtsc/rdtscp fault so the recorder can emulate and record them.
+            if libc::prctl(libc::PR_SET_TSC, libc::PR_TSC_SIGSEGV, 0, 0, 0) != 0 {
+                return Err(std::io::Error::last_os_error());
+            }
             ptrace::traceme().map_err(std::io::Error::from)?;
             Ok(())
         });

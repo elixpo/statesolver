@@ -324,6 +324,16 @@ pub enum EventKind {
         /// Whether the process died from it.
         fatal: bool,
     },
+    /// A non-deterministic instruction (`rdtsc`, `rdtscp`) emulated by the
+    /// recorder; replay sets the same register values.
+    Nondet {
+        /// Instruction address.
+        pc: u64,
+        /// Mnemonic.
+        insn: String,
+        /// Registers written by the instruction.
+        values: Vec<(Reg, u64)>,
+    },
     /// Ground-truth or user marker (`ss_mark("label")` in the bug corpus).
     Mark {
         /// Label.
@@ -349,6 +359,7 @@ impl EventKind {
             Self::Alloc { .. } => "alloc",
             Self::Free { .. } => "free",
             Self::Signal { .. } => "signal",
+            Self::Nondet { .. } => "nondet",
             Self::Mark { .. } => "mark",
             Self::Exit { .. } => "exit",
         }
