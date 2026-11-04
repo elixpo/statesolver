@@ -10,6 +10,7 @@
 
 #![cfg(target_os = "linux")]
 
+pub mod explain;
 pub mod index;
 pub mod provenance;
 pub mod queries;

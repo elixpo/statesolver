@@ -122,6 +122,68 @@ fn mem_operand(s: &mut Session, ins: &Instruction) -> Result<Option<(u64, u8)>> 
     Ok(addr.map(|a| (a, len)))
 }
 
+/// Where a register's value came from, for the instruction that wrote it.
+///
+/// Pointer arithmetic keeps provenance: `add rdi, rdx` and `lea rdi,
+/// [rax+8]` continue with the pointer (`rdi`, `rax`), not the offset. A
+/// `lea` based on `rsp`/`rbp` or `rip` produces a stack or code address,
+/// which is a constant origin.
+fn next_carrier(
+    s: &mut Session,
+    ins: &Instruction,
+    insn: &Insn,
+    reg: Reg,
+) -> Result<Option<Carrier>> {
+    if insn.text.starts_with("lea") {
+        return Ok(to_reg(ins.memory_base())
+            .filter(|r| !matches!(r, Reg::Rsp | Reg::Rbp))
+            .map(|reg| Carrier::Reg { reg }));
+    }
+    if let Some((addr, len)) = mem_operand(s, ins)? {
+        return Ok(Some(Carrier::Mem { addr, len }));
+    }
+    // Read-modify-write of the tracked register (add, sub, and, inc, ...).
+    if insn.reads.iter().any(|r| r == reg.name()) && !insn.text.starts_with("xor") {
+        return Ok(Some(Carrier::Reg { reg }));
+    }
+    Ok(insn
+        .reads
+        .iter()
+        .filter(|r| *r != reg.name() && !r.starts_with("rflags") && *r != "rsp")
+        .find_map(|r| Reg::from_name(r))
+        .map(|reg| Carrier::Reg { reg }))
+}
+
+/// For a store from vector register `v` at `at`, find the vector load that
+/// filled `v` and return the source bytes that ended up `offset` bytes into
+/// the stored data (memcpy-style SIMD copies).
+fn vector_source(
+    s: &mut Session,
+    v: Register,
+    at: RrPos,
+    offset: u64,
+    len: u8,
+    max_steps: u32,
+) -> Result<Option<Carrier>> {
+    let full = format!("{:?}", v.full_register()).to_lowercase();
+    s.goto(at)?;
+    for _ in 0..max_steps {
+        if matches!(s.reverse_step()?, Stop::Begin) {
+            return Ok(None);
+        }
+        let pos = s.position()?;
+        let insn = queries::decode_at(s, pos.pc)?;
+        if insn.writes.contains(&full) {
+            let ins = decode(s, pos.pc)?;
+            return Ok(mem_operand(s, &ins)?.map(|(src, _)| Carrier::Mem {
+                addr: src + offset,
+                len,
+            }));
+        }
+    }
+    Ok(None)
+}
+
 /// Index events that are allocations, for matching allocation returns.
 fn allocations(index: &[Event]) -> Vec<(RrPos, AllocId, Epoch, u64)> {
     index
@@ -205,18 +267,7 @@ pub fn trace(
                         origin: Origin::Syscall { pos: dpos },
                     });
                 }
-                let is_lea = insn.text.starts_with("lea");
-                let from = if is_lea {
-                    None
-                } else if let Some((addr, len)) = mem_operand(s, &ins)? {
-                    Some(Carrier::Mem { addr, len })
-                } else {
-                    insn.reads
-                        .iter()
-                        .filter(|r| *r != reg.name() && !r.starts_with("rflags") && *r != "rsp")
-                        .find_map(|r| Reg::from_name(r))
-                        .map(|reg| Carrier::Reg { reg })
-                };
+                let from = next_carrier(s, &ins, &insn, reg)?;
                 hops.push(Hop {
                     pos: dpos,
                     insn,
@@ -248,11 +299,33 @@ pub fn trace(
                 };
                 s.goto(w.pos)?;
                 let ins = decode(s, w.pos.pc)?;
-                // The stored value's source: the register operand of the store.
-                let src = (0..ins.op_count())
+                if w.insn.text.starts_with("syscall") {
+                    hops.push(Hop {
+                        pos: w.pos,
+                        insn: w.insn.clone(),
+                        into: carrier,
+                        from: None,
+                    });
+                    return Ok(Chain {
+                        hops,
+                        origin: Origin::Syscall { pos: w.pos },
+                    });
+                }
+                // The stored value's source: the register operand of the store,
+                // or, for SIMD copies, the matching bytes of the vector load.
+                let src_reg = (0..ins.op_count())
                     .filter(|&i| ins.op_kind(i) == iced_x86::OpKind::Register)
-                    .find_map(|i| to_reg(ins.op_register(i)))
-                    .map(|reg| Carrier::Reg { reg });
+                    .map(|i| ins.op_register(i))
+                    .next();
+                let src = match src_reg {
+                    Some(r) if to_reg(r).is_some() => to_reg(r).map(|reg| Carrier::Reg { reg }),
+                    Some(r) if r.is_xmm() || r.is_ymm() || r.is_zmm() => {
+                        let offset =
+                            mem_operand(s, &ins)?.map_or(0, |(dst, _)| addr.saturating_sub(dst));
+                        vector_source(s, r, w.pos, offset, len, max_steps)?
+                    }
+                    _ => None,
+                };
                 hops.push(Hop {
                     pos: w.pos,
                     insn: w.insn.clone(),

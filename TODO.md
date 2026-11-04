@@ -35,8 +35,11 @@ Findings go in [DISCOVERIES.md](DISCOVERIES.md).
 
 - [x] Causal primitives (`statesolver-replay::queries`): `last_writer` (watchpoint plus reverse-continue, stopping on the writer before it executes) and `reg_producer` (reverse-step until the register is written), with `iced-x86` decoding of read, write, and address registers
 - [x] Provenance chain (`statesolver-replay::provenance`): alternates register producers and memory last-writers back to an allocation return, syscall input, or constant. On bug 001 the stale pointer resolves to **allocation #0 epoch 1** while the address belongs to **#1 epoch 2** (6 hops, tested)
-- [ ] Epoch check as an explicit inference (pointer origin epoch against owner epoch at use), and the `origin` and `why` CLI commands
-- [ ] Provenance through `memcpy`-style SIMD copies and `rep movs` (multi-byte sources)
+- [x] `explain-crash` with the uniform write rule (pointer origin against owner at write time gives UAF-reuse, UAF, OOB, or in-bounds) and FACT/INFERENCE evidence IDs; `--address-only` gives arm A5
+- [x] Ground truth: 001 → use-after-free with address reuse, 002 → double free (the aliasing copy appears in the pointer chain), 003 → heap buffer overflow, with the value traced to `read()` input. The address-only mode does not reach the UAF conclusion on 001. All tested
+- [ ] `origin <addr|reg> --event` and `why <reg|addr> --event` CLI commands over the same engine
+- [x] Provenance through SIMD copies (vector store → vector load → source bytes at the matching offset) and through syscall writes (kernel writes appear as watchpoint hits on `syscall`)
+- [ ] `rep movs` copies; FS/GS-relative addresses; values in static data labelled as such
 - [ ] Temporal object graph; address-only switch (arm A5)
 - [ ] `why`, `origin`, `history`, `lifetime`, `explain-crash`; evidence IDs stored with replay positions
 - [ ] Ground-truth assertions from `ROOT_CAUSE.md`; grow the corpus with real reuse bugs

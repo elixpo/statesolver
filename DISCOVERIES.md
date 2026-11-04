@@ -6,6 +6,24 @@ MorphStack's log is archived at [docs/archive/morphstack/DISCOVERIES.md](docs/ar
 
 ---
 
+## 2026-11-04: explain-crash classifies all three corpus bugs correctly with one lifetime-aware rule
+
+- **Rule:** for the write that produced the crashing value, compare the allocation its **address pointer came from** (provenance origin) with the allocation that **owned the address** at that moment:
+
+  | Pointer origin | Owner at write time | Verdict |
+  |---|---|---|
+  | Freed | Another allocation at the same address | Use-after-free with reuse |
+  | Freed | None | Use-after-free |
+  | Live | A different allocation | Overflow |
+
+- **Results:**
+  - 001: use-after-free with address reuse. The pointer chain crosses from inside `memcpy` back to `load_user`'s `malloc`, at epoch 1.
+  - 002: double free. The pointer chain shows the aliasing store `b->buf = a->buf`.
+  - 003: heap buffer overflow, 8 bytes past a 24-byte buffer into its neighbour. The value chain follows a SIMD copy back to the `read()` syscall, so the corrupt bytes are external input.
+- **Ablation preview:** the same engine in address-only mode (arm A5) stops at "`mov [rdi],rsi` wrote 0x…", with no stale-pointer conclusion. Tests assert both outcomes.
+- **Engine facts:** rr reports kernel writes during a syscall as a watchpoint hit on the `syscall` instruction, which makes syscall input a natural chain terminal. SIMD copies need one extra hop: from the vector store to the vector load to the source bytes at the same offset.
+- **Caveat:** three synthetic bugs. The pilot (#4) is what tests whether this generalises to real CVEs.
+
 ## 2026-11-04: First end-to-end lifetime-aware provenance chain on a real replay
 
 - **Finding:** from the stale `name[0] = 'A'` store in bug 001, `provenance::trace` follows the pointer back through 6 hops of real x86-64 code: `mov rax,[rbp-20h]` (load `s.cached_user`) ← `mov [rbp-20h],rax` (`s.cached_user = u`) ← `mov rax,[rbp-18h]` ← `mov [rbp-18h],rax` (`u = load_user()`) ← `mov rax,[rbp-8]` (`return u`) ← `mov [rbp-8],rax` (`u = malloc()`). It ends at **allocation #0, epoch 1**. The address being written belongs to **#1, epoch 2** at that time. This is the mechanism the paper's arm A4 exposes and A5 (address-only) cannot.

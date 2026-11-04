@@ -44,6 +44,18 @@ enum Command {
         #[arg(long)]
         force: bool,
     },
+    /// Explain the recorded crash: classification plus a cited evidence chain.
+    #[cfg(target_os = "linux")]
+    ExplainCrash {
+        /// rr trace directory.
+        trace: PathBuf,
+        /// Address-only analysis: no allocation-lifetime reasoning (study arm A5).
+        #[arg(long)]
+        address_only: bool,
+        /// Emit JSON (with full provenance chains).
+        #[arg(long)]
+        json: bool,
+    },
     /// Registers (and optionally memory) at an indexed event of an rr trace.
     #[cfg(target_os = "linux")]
     State {
@@ -145,6 +157,12 @@ fn run(cli: Cli) -> Result<ExitCode> {
                 record_rr(&out, stdin, &command)
             }
         }
+        #[cfg(target_os = "linux")]
+        Command::ExplainCrash {
+            trace,
+            address_only,
+            json,
+        } => explain_crash(&trace, address_only, json),
         #[cfg(target_os = "linux")]
         Command::State { trace, event, mem } => state(&trace, event, mem.as_deref()),
         #[cfg(target_os = "linux")]
@@ -586,4 +604,50 @@ fn rr_bind_args() -> Vec<String> {
 #[cfg(not(target_os = "linux"))]
 fn rr_bind_args() -> Vec<String> {
     Vec::new()
+}
+
+#[cfg(target_os = "linux")]
+fn explain_crash(trace: &Path, address_only: bool, json: bool) -> Result<ExitCode> {
+    let index_path = index(trace, false)?;
+    let events: Vec<statesolver_trace::Event> =
+        statesolver_trace::open(&index_path)?.collect::<std::result::Result<_, _>>()?;
+    let mut s = statesolver_replay::Session::start(Some(trace)).context("starting rr replay")?;
+    let x = statesolver_replay::explain::explain_crash(&mut s, &events, address_only)
+        .context("explaining the crash")?;
+    if json {
+        println!("{}", serde_json::to_string_pretty(&x)?);
+        return Ok(ExitCode::SUCCESS);
+    }
+    println!("Classification: {}", x.classification);
+    println!();
+    println!("{}", x.summary);
+    println!();
+    println!("Evidence:");
+    for e in &x.evidence {
+        let because = if e.because.is_empty() {
+            String::new()
+        } else {
+            format!("  [from {}]", e.because.join(", "))
+        };
+        println!(
+            "  {:<4} {:<9} {}{because}",
+            e.id,
+            format!("{:?}", e.tier).to_uppercase(),
+            e.claim
+        );
+    }
+    for (title, chain) in [
+        ("Pointer provenance", &x.pointer_chain),
+        ("Value provenance", &x.value_chain),
+    ] {
+        if let Some(c) = chain {
+            println!();
+            println!("{title}:");
+            for h in &c.hops {
+                println!("  {:#014x}  {}", h.pos.pc, h.insn.text);
+            }
+            println!("  origin: {}", serde_json::to_string(&c.origin)?);
+        }
+    }
+    Ok(ExitCode::SUCCESS)
 }

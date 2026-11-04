@@ -312,3 +312,77 @@ fn stale_pointer_provenance_ends_at_the_freed_epoch() {
     drop(s);
     let _ = std::fs::remove_dir_all(rr);
 }
+
+fn explain(
+    name: &str,
+    stdin: Option<&str>,
+    address_only: bool,
+) -> Option<statesolver_replay::explain::Explanation> {
+    let rr = rr_record(name, stdin)?;
+    let mut s = statesolver_replay::Session::start(Some(&rr)).expect("rr replay");
+    let (_, index, _) = statesolver_replay::index::build(&mut s).expect("index");
+    drop(s);
+    let mut s = statesolver_replay::Session::start(Some(&rr)).expect("rr replay");
+    let x =
+        statesolver_replay::explain::explain_crash(&mut s, &index, address_only).expect("explain");
+    drop(s);
+    let _ = std::fs::remove_dir_all(rr);
+    Some(x)
+}
+
+/// Stage 3 exit criterion: every corpus bug gets its ground-truth class
+/// (`bug-corpus/*/ROOT_CAUSE.md`), and every inference cites evidence.
+#[test]
+fn explain_crash_matches_ground_truth() {
+    use statesolver_replay::explain::Tier;
+    let cases = [
+        ("001-uaf-reuse", None, "use-after-free with address reuse"),
+        ("002-double-free", None, "double free"),
+        (
+            "003-heap-overflow-input",
+            Some("input/overflow.bin"),
+            "heap buffer overflow",
+        ),
+    ];
+    for (name, stdin, class) in cases {
+        let Some(x) = explain(name, stdin, false) else {
+            return;
+        };
+        assert_eq!(x.classification, class, "{name}: {}", x.summary);
+        let ids: Vec<&str> = x.evidence.iter().map(|e| e.id.as_str()).collect();
+        for e in x.evidence.iter().filter(|e| e.tier == Tier::Inference) {
+            assert!(!e.because.is_empty(), "{name}: uncited inference {}", e.id);
+            for cited in &e.because {
+                assert!(
+                    ids.contains(&cited.as_str()),
+                    "{name}: {} cites missing {cited}",
+                    e.id
+                );
+            }
+        }
+        if name.starts_with("003") {
+            assert!(
+                matches!(
+                    x.value_chain.as_ref().map(|c| &c.origin),
+                    Some(statesolver_replay::provenance::Origin::Syscall { .. })
+                ),
+                "003: the corrupt value comes from read() input"
+            );
+        }
+    }
+}
+
+/// The ablation (arm A5): without allocation lifetimes the same engine cannot
+/// tell that bug 001's write went through a stale pointer.
+#[test]
+fn address_only_mode_misses_the_stale_pointer() {
+    let Some(x) = explain("001-uaf-reuse", None, true) else {
+        return;
+    };
+    assert!(
+        !x.classification.contains("use-after-free"),
+        "{}",
+        x.classification
+    );
+    assert!(x.pointer_chain.is_none());
+}
