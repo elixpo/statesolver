@@ -6,6 +6,30 @@ MorphStack's log is archived at [docs/archive/morphstack/DISCOVERIES.md](docs/ar
 
 ---
 
+## 2026-11-04: Literature review gives a narrowed GO. Epoch identity is prior art; lifetime-aware on-demand slicing is the claim
+
+- **Finding:** 67 queries, 68 works ([docs/slr/](docs/slr/verdict.md)). No work combines all five: unmodified native binaries, deterministic replay, per-query dependence reconstruction, allocation-lifetime identity across reuse, and backward slices that reach syscall input.
+  - **Undangle** (ISSTA 2012) already labels binary pointers with allocation address plus instruction counter.
+  - **FreeWill** (USENIX Security 2022) already slices backward to pick the right lifetime of a reallocated block.
+  - **Arnold and JetStream** compute replay-time provenance with syscall sources, but key on byte addresses.
+  - **Pernosco** builds an eager write database and does not document lifetimes.
+- **Claim (locked wording):** answer backward causal queries about arbitrary machine values by reconstructing only the queried dependences through checkpointed replay, resolving heap dependences by (address, epoch). Show that address-only slicing gives wrong or inflated chains under reuse.
+- **Do not claim:** epoch identity, on-demand slicing, replay-decoupled provenance, I/O-sourced provenance, or an LLM driving a debugger, each on its own.
+- **Evaluation consequences (added to #4):**
+  - an ablation on the same engine, comparing address-only with lifetime-qualified dependence;
+  - an Undangle-style forward pointer-label baseline;
+  - an eager-index (Pernosco-like) baseline, with the break-even point on number of queries per trace;
+  - real reuse bugs (FreeWill's reallocation cases, SEC-bench, Magma);
+  - a stated story for custom allocators (pools and arenas).
+- **Biggest residual risk:** whether Pernosco or REVEN handle lifetimes internally is undocumented. Test Pernosco on corpus bug 001 if access is possible.
+
+## 2026-11-04: The recorder works, and glibc's free re-enters its own entry point
+
+- **Finding:** `statesolver record` captures all three corpus bugs correctly: 001 (address reuse, epochs 1→2, SIGSEGV), 002 (6 frees, the double free flagged as rule-7 evidence, SIGABRT), and 003 (stdin bytes captured as external input: length byte `0x30`, 48-byte payload).
+- **Subtle case 1:** glibc 2.42's `free` jumps back to its own entry (same `rsp`, pointer, and return address) on its slow path. A naive entry breakpoint counts one free twice. Fix: track frees in flight until their return breakpoint, and ignore matching re-entries. A real double free in a loop is still caught, because the first call returns before the second enters.
+- **Subtle case 2:** removing a return breakpoint inside its own handler left `rip` one byte into an instruction. That silently scrambled control flow, and showed up as missing frees in 002. Fix: only step-over removes breakpoints. Both cases are covered by `crates/statesolver-record/tests/corpus.rs`.
+- **Implication for the evaluation:** recording correctness must itself be tested against ground truth. "Recorded trace validates" is not enough.
+
 ## 2026-11-04: A double free produces an "invalid" trace, and that must stay evidence
 
 - **Finding:** validator rule 7 (`free` must name a live allocation) is broken by exactly the bugs StateSolver exists to explain (bug-corpus 002). The recorder must still emit the event as it happened.
