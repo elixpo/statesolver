@@ -44,6 +44,19 @@ enum Command {
         #[arg(long)]
         force: bool,
     },
+    /// Registers (and optionally memory) at an indexed event of an rr trace.
+    #[cfg(target_os = "linux")]
+    State {
+        /// rr trace directory.
+        #[arg(long)]
+        trace: PathBuf,
+        /// StateSolver event id (from `allocations`, `trace stats`, or the index).
+        #[arg(long)]
+        event: u64,
+        /// Also dump memory: `ADDR:LEN` (hex address, decimal length).
+        #[arg(long)]
+        mem: Option<String>,
+    },
     /// Inspect, check, and convert `.ss` traces.
     #[command(subcommand)]
     Trace(TraceCmd),
@@ -132,6 +145,8 @@ fn run(cli: Cli) -> Result<ExitCode> {
                 record_rr(&out, stdin, &command)
             }
         }
+        #[cfg(target_os = "linux")]
+        Command::State { trace, event, mem } => state(&trace, event, mem.as_deref()),
         #[cfg(target_os = "linux")]
         Command::Index { trace, force } => {
             index(&trace, force)?;
@@ -226,7 +241,11 @@ fn record_rr(out: &Path, stdin: Option<PathBuf>, command: &[String]) -> Result<E
         );
     }
     let mut cmd = std::process::Command::new("rr");
-    cmd.arg("record").arg("-o").arg(out).args(command);
+    cmd.arg("record")
+        .args(rr_bind_args())
+        .arg("-o")
+        .arg(out)
+        .args(command);
     if let Some(path) = stdin {
         cmd.stdin(
             std::fs::File::open(&path).with_context(|| format!("opening {}", path.display()))?,
@@ -234,6 +253,11 @@ fn record_rr(out: &Path, stdin: Option<PathBuf>, command: &[String]) -> Result<E
     }
     let status = cmd.status().context("running rr (is it installed?)")?;
     anyhow::ensure!(out.is_dir(), "rr did not produce a trace (status {status})");
+    anyhow::ensure!(
+        !out.join("incomplete").exists(),
+        "rr terminated abnormally and {} is incomplete; re-record it",
+        out.display()
+    );
     eprintln!("recorded {} (program status {status})", out.display());
     Ok(ExitCode::SUCCESS)
 }
@@ -480,4 +504,86 @@ fn record(out: &Path, stdin: Option<PathBuf>, command: Vec<String>) -> Result<Ex
         );
     }
     Ok(ExitCode::SUCCESS)
+}
+
+#[cfg(target_os = "linux")]
+fn state(trace: &Path, event: u64, mem: Option<&str>) -> Result<ExitCode> {
+    use statesolver_trace::Reg;
+    let index = index(trace, false)?;
+    let e = statesolver_trace::open(&index)?
+        .filter_map(Result::ok)
+        .find(|e| e.id.0 == event)
+        .with_context(|| format!("no event E{event} in the index"))?;
+    let pos = e.rr.context("event has no rr position")?;
+    let mut s = statesolver_replay::Session::start(Some(trace)).context("starting rr replay")?;
+    s.goto(pos).context("replaying to the event")?;
+    println!(
+        "E{event} ({}) at rr event {}, tick {}, pc {:#x}",
+        e.kind.name(),
+        pos.event,
+        pos.ticks,
+        pos.pc
+    );
+    let regs = [
+        Reg::Rax,
+        Reg::Rbx,
+        Reg::Rcx,
+        Reg::Rdx,
+        Reg::Rsi,
+        Reg::Rdi,
+        Reg::Rbp,
+        Reg::Rsp,
+        Reg::R8,
+        Reg::R9,
+        Reg::R10,
+        Reg::R11,
+        Reg::R12,
+        Reg::R13,
+        Reg::R14,
+        Reg::R15,
+        Reg::Rip,
+        Reg::Rflags,
+    ];
+    for chunk in regs.chunks(4) {
+        let line: Vec<String> = chunk
+            .iter()
+            .map(|r| format!("{:>6} {:#018x}", r.name(), s.reg(*r).unwrap_or(0)))
+            .collect();
+        println!("  {}", line.join("  "));
+    }
+    if let Some(spec) = mem {
+        let (a, l) = spec.split_once(':').context("--mem expects ADDR:LEN")?;
+        let addr = parse_addr(a)?;
+        let len: usize = l.parse().context("bad length")?;
+        let bytes = s.mem(addr, len)?;
+        for (i, row) in bytes.chunks(16).enumerate() {
+            let hex: Vec<String> = row.iter().map(|b| format!("{b:02x}")).collect();
+            let ascii: String = row
+                .iter()
+                .map(|&b| {
+                    if b.is_ascii_graphic() {
+                        char::from(b)
+                    } else {
+                        '.'
+                    }
+                })
+                .collect();
+            println!(
+                "  {:#014x}  {:<48} {ascii}",
+                addr + 16 * i as u64,
+                hex.join(" ")
+            );
+        }
+    }
+    Ok(ExitCode::SUCCESS)
+}
+
+#[cfg(target_os = "linux")]
+fn rr_bind_args() -> Vec<String> {
+    statesolver_replay::rr_record_args()
+}
+
+#[cfg(not(target_os = "linux"))]
+fn rr_bind_args() -> Vec<String> {
+    Vec::new()
 }

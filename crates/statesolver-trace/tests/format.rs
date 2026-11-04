@@ -104,7 +104,7 @@ fn events() -> impl Strategy<Value = Vec<Event>> {
             .enumerate()
             .map(|(i, kind)| Event {
                 id: EventId(i as u64),
-                rr_event: None,
+                rr: None,
                 kind,
             })
             .collect()
@@ -160,7 +160,7 @@ proptest! {
 fn ev(id: u64, kind: EventKind) -> Event {
     Event {
         id: EventId(id),
-        rr_event: None,
+        rr: None,
         kind,
     }
 }

@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
 use std::time::{Duration, Instant};
 
-use statesolver_trace::Reg;
+use statesolver_trace::{Reg, RrPos};
 
 use crate::rsp::{self, Connection};
 use crate::{Error, Result};
@@ -121,14 +121,24 @@ impl Session {
         if let Some(t) = trace {
             cmd.arg(t);
         }
-        let rr = cmd
+        let log = std::env::temp_dir().join(format!("statesolver-rr-{port}.log"));
+        let mut rr = cmd
             .stdin(Stdio::null())
             .stdout(Stdio::null())
-            .stderr(Stdio::null())
+            // A file, not a pipe: rr can write a lot during long replays and
+            // would block on a full pipe that nobody drains.
+            .stderr(Stdio::from(std::fs::File::create(&log)?))
             .spawn()
             .map_err(|e| Error::Protocol(format!("cannot run rr: {e}")))?;
         let deadline = Instant::now() + Duration::from_secs(20);
         let stream = loop {
+            if let Some(status) = rr.try_wait()? {
+                let err = std::fs::read_to_string(&log).unwrap_or_default();
+                return Err(Error::Protocol(format!(
+                    "rr replay exited ({status}) before listening: {}",
+                    err.trim()
+                )));
+            }
             match TcpStream::connect(("127.0.0.1", port)) {
                 Ok(s) => break s,
                 Err(_) if Instant::now() < deadline => {
@@ -280,6 +290,84 @@ impl Session {
             .next()
             .and_then(|n| n.trim().parse().ok())
             .ok_or_else(|| Error::Protocol(format!("unexpected `when` reply {text:?}")))
+    }
+
+    fn rr_text(&mut self, cmd: &str) -> Result<String> {
+        let reply = self.conn.request(&format!("qRRCmd:{cmd}:-1"))?;
+        Ok(String::from_utf8_lossy(&rsp::decode_hex(&reply)?).into_owned())
+    }
+
+    /// rr's current tick count (retired conditional branches).
+    ///
+    /// # Errors
+    /// Fails on protocol errors.
+    pub fn ticks(&mut self) -> Result<u64> {
+        let text = self.rr_text("when-ticks")?;
+        text.rsplit(':')
+            .next()
+            .and_then(|n| n.trim().parse().ok())
+            .ok_or_else(|| Error::Protocol(format!("unexpected `when-ticks` reply {text:?}")))
+    }
+
+    /// The exact current position.
+    ///
+    /// # Errors
+    /// Fails on protocol errors.
+    pub fn position(&mut self) -> Result<RrPos> {
+        Ok(RrPos {
+            event: self.when()?,
+            ticks: self.ticks()?,
+            pc: self.reg(Reg::Rip)?,
+            sp: self.reg(Reg::Rsp)?,
+        })
+    }
+
+    /// Restart the replay at the start of rr event `event` (forward or backward).
+    ///
+    /// # Errors
+    /// Fails on protocol errors.
+    pub fn seek_event(&mut self, event: u64) -> Result<()> {
+        let arg = statesolver_trace::bytes::to_hex(event.to_string().as_bytes());
+        let reply = self.conn.request(&format!("vRun;;{arg}"))?;
+        parse_stop(&reply)?;
+        Ok(())
+    }
+
+    /// Replay to exactly `pos`: seek to its rr event, then run forward with a
+    /// breakpoint on its `pc` until ticks and stack pointer match.
+    ///
+    /// # Errors
+    /// Fails if the position is never reached.
+    pub fn goto(&mut self, pos: RrPos) -> Result<()> {
+        self.seek_event(pos.event)?;
+        if self.position()? == pos {
+            return Ok(());
+        }
+        self.set_breakpoint(pos.pc)?;
+        let result = loop {
+            match self.cont()? {
+                Stop::Breakpoint => {
+                    let ticks = self.ticks()?;
+                    if ticks == pos.ticks
+                        && self.reg(Reg::Rip)? == pos.pc
+                        && self.reg(Reg::Rsp)? == pos.sp
+                    {
+                        break Ok(());
+                    }
+                    if ticks > pos.ticks {
+                        break Err(Error::Protocol(format!("overshot position {pos:?}")));
+                    }
+                }
+                Stop::Exited(_) | Stop::Killed(_) => {
+                    break Err(Error::Protocol(format!("replay ended before {pos:?}")));
+                }
+                _ => {}
+            }
+            // Step off the breakpoint before continuing.
+            self.step_over_breakpoint(pos.pc, true)?;
+        };
+        self.remove_breakpoint(pos.pc)?;
+        result
     }
 
     /// `/proc/<pid>/maps` of the replayed process (rr replays by executing

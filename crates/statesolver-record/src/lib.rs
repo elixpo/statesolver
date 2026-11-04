@@ -218,7 +218,7 @@ impl<W: std::io::Write> Recorder<W> {
         }
         self.out.write(&Event {
             id: EventId(self.next_event),
-            rr_event: None,
+            rr: None,
             kind,
         })?;
         self.next_event += 1;

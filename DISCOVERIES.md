@@ -6,6 +6,12 @@ MorphStack's log is archived at [docs/archive/morphstack/DISCOVERIES.md](docs/ar
 
 ---
 
+## 2026-11-04: On hybrid CPUs rr must be pinned to a P-core; positions need the stack pointer
+
+- **Finding 1:** `rr record` binds to a random CPU. On this hybrid i5-13450HX (P-cores 0–11, E-cores 12–15), landing on an E-core gives `FATAL check_working_counters: Got 0 branch events`, and rr leaves an `incomplete` trace. Earlier runs passed by luck, which made the replay tests look flaky. Fix: `rr record --bind-to-cpu=<first P-core>` from `/sys/devices/cpu_core/cpus` (`statesolver_replay::rr_record_args`). Replay uses the CPU stored in the trace, so it follows. 10 of 10 pinned recordings were clean. `statesolver record` also rejects traces that carry rr's `incomplete` marker.
+- **Finding 2:** `(rr event, ticks, pc)` does not identify an instruction instance. Two calls to `ss_mark` from `main` and from `logout` had the same event, the same ticks (no conditional branch between them), and the same `pc`, and `goto` landed on the wrong one. Adding the stack pointer makes `RrPos {event, ticks, pc, sp}` unique: revisiting the same `pc` with the same ticks and `sp` would need an unconditional backward loop. A test now visits every alloc and mark position in reverse order and checks `rax` and the marker label.
+- **Lesson:** good diagnostics paid off immediately. Reporting rr's own stderr on early exit, instead of a connection timeout, turned a "flaky test" into two concrete root causes in minutes.
+
 ## 2026-11-04: rr backend works; allocation epochs derived during replay match the fixture recorder exactly
 
 - **Finding:** `statesolver record` (an rr wrapper) followed by `statesolver index` (one replay pass breaking on the allocator) reproduces the fixture recorder's results on every corpus bug:

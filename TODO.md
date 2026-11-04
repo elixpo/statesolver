@@ -23,11 +23,13 @@ Findings go in [DISCOVERIES.md](DISCOVERIES.md).
 - [x] rr feasibility: bug 001 records and replays; reverse-continue with a watchpoint finds the stale writer
 - [x] `statesolver record` as an rr wrapper (`-o` trace directory, `--stdin`, `perf_event_paranoid` warning); the old recorder is reachable as `--fixture`
 - [x] Replay driver (`statesolver-replay`): RSP client in no-ack mode; continue, reverse-continue, step, reverse-step; software breakpoints and hardware write watchpoints; registers, memory, `when`; replay-process maps
-- [ ] Map rr positions to event IDs
+- [x] Exact positions: `RrPos {event, ticks, pc, sp}` on every index event; `Session::goto` seeks with `vRun` and then runs to the matching instance (tested on every alloc and mark, in reverse order)
 - [x] On-demand allocation epochs: `statesolver index` replays once (about 0.12 s per corpus bug), caches `statesolver-index.ss` in the trace directory, and every event carries `rr_event`. Matches the fixture recorder on all 3 bugs; rr corpus tests are in the suite
 - [ ] Index cost on allocation-heavy programs (each allocator call is a replay breakpoint stop)
-- [ ] Historical state: regs, memory, maps, stack at an event
-- [ ] CI runner with PMU access (GitHub-hosted runners may lack a vPMU)
+- [x] Historical state: `statesolver state --trace T --event E [--mem ADDR:LEN]`
+- [ ] Stack unwinding at an event (frame pointers, then DWARF CFI)
+- [x] rr pinned to a performance core on hybrid CPUs (`--bind-to-cpu`; replay follows the trace's CPU)
+- [ ] CI runner with PMU access (GitHub-hosted runners may lack a vPMU; rr tests skip there)
 
 ## Stage 3: Causal query engine (#3)
 

@@ -80,11 +80,11 @@ struct Indexer<'a> {
 
 impl Indexer<'_> {
     fn emit(&mut self, kind: EventKind) -> Result<()> {
-        let at = self.s.when()?;
+        let at = self.s.position()?;
         let id = EventId(self.events.len() as u64);
         self.events.push(Event {
             id,
-            rr_event: Some(at),
+            rr: Some(at),
             kind,
         });
         Ok(())

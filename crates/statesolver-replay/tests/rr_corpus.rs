@@ -12,6 +12,13 @@ fn corpus() -> PathBuf {
 }
 
 fn rr_record(name: &str, stdin: Option<&str>) -> Option<PathBuf> {
+    // Tests run in parallel and may record the same program: unique dirs.
+    static NEXT: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
+    // One recording at a time keeps the pinned performance core uncontended.
+    static RECORDING: std::sync::Mutex<()> = std::sync::Mutex::new(());
+    let _guard = RECORDING
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
     let dir = corpus().join(name);
     let built = Command::new("sh")
         .arg(corpus().join("common/build.sh"))
@@ -24,11 +31,15 @@ fn rr_record(name: &str, stdin: Option<&str>) -> Option<PathBuf> {
         eprintln!("skipping {name}: build failed");
         return None;
     }
-    let out = std::env::temp_dir().join(format!("statesolver-rr-{name}-{}", std::process::id()));
+    let n = NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+    let out =
+        std::env::temp_dir().join(format!("statesolver-rr-{name}-{}-{n}", std::process::id()));
     let _ = std::fs::remove_dir_all(&out);
     let mut cmd = Command::new("rr");
     cmd.current_dir(&dir)
-        .args(["record", "-o"])
+        .arg("record")
+        .args(statesolver_replay::rr_record_args())
+        .arg("-o")
         .arg(&out)
         .arg(dir.join(name))
         .stdout(Stdio::null())
@@ -37,7 +48,13 @@ fn rr_record(name: &str, stdin: Option<&str>) -> Option<PathBuf> {
         cmd.stdin(std::fs::File::open(dir.join(s)).ok()?);
     }
     match cmd.status() {
-        Ok(_) if out.is_dir() => Some(out),
+        Ok(_) if out.is_dir() => {
+            assert!(
+                !out.join("incomplete").exists(),
+                "rr left an incomplete trace for {name}"
+            );
+            Some(out)
+        }
         _ => {
             eprintln!("skipping {name}: rr record unavailable (rr missing or no PMU access)");
             None
@@ -58,11 +75,14 @@ fn index(name: &str, stdin: Option<&str>) -> Option<(Vec<EventKind>, Vec<Rule>)>
         .map(|x| x.rule)
         .collect();
     assert!(
-        events.iter().all(|e| e.rr_event.is_some()),
+        events.iter().all(|e| e.rr.is_some()),
         "every event has an rr position"
     );
     assert!(
-        events.windows(2).all(|w| w[0].rr_event <= w[1].rr_event),
+        events
+            .windows(2)
+            .all(|w| (w[0].rr.unwrap().event, w[0].rr.unwrap().ticks)
+                <= (w[1].rr.unwrap().event, w[1].rr.unwrap().ticks)),
         "rr positions are monotonic"
     );
     Some((events.into_iter().map(|e| e.kind).collect(), rules))
@@ -139,4 +159,43 @@ fn overflow_from_replay() {
             ..
         })
     ));
+}
+
+#[test]
+fn goto_lands_on_the_exact_instruction_instance() {
+    let Some(trace) = rr_record("001-uaf-reuse", None) else {
+        return;
+    };
+    let mut s = statesolver_replay::Session::start(Some(&trace)).expect("rr replay");
+    let (_, events, _) = statesolver_replay::index::build(&mut s).expect("index");
+    drop(s);
+    // A fresh session, visiting positions out of order (backward and forward).
+    let mut s = statesolver_replay::Session::start(Some(&trace)).expect("rr replay");
+    let mut checked = 0;
+    for e in events.iter().rev() {
+        let pos = e.rr.expect("position");
+        match &e.kind {
+            EventKind::Alloc { addr, .. } => {
+                s.goto(pos).expect("goto alloc");
+                assert_eq!(
+                    s.reg(statesolver_trace::Reg::Rax).unwrap(),
+                    *addr,
+                    "rax at malloc return"
+                );
+                checked += 1;
+            }
+            EventKind::Mark { label, .. } => {
+                s.goto(pos).expect("goto mark");
+                let p = s.reg(statesolver_trace::Reg::Rdi).unwrap();
+                let raw = s.mem(p, label.len()).unwrap();
+                assert_eq!(String::from_utf8_lossy(&raw), label.as_str());
+                checked += 1;
+            }
+            _ => continue,
+        }
+        assert_eq!(s.position().unwrap(), pos);
+    }
+    drop(s);
+    let _ = std::fs::remove_dir_all(trace);
+    assert!(checked >= 6, "checked {checked}");
 }

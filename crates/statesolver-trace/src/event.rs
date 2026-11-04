@@ -238,15 +238,32 @@ pub struct MemWrite {
     pub data: Bytes,
 }
 
+/// An exact position in an rr recording: rr's event number, its retired
+/// conditional-branch tick count, the instruction pointer, and the stack
+/// pointer. Ticks alone do not separate two visits to the same `pc` with no
+/// conditional branch in between (for example, two calls to the same
+/// function from different frames); the stack pointer does.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+pub struct RrPos {
+    /// rr event number (`when`).
+    pub event: u64,
+    /// Tick count (`when-ticks`).
+    pub ticks: u64,
+    /// Instruction pointer.
+    pub pc: u64,
+    /// Stack pointer.
+    pub sp: u64,
+}
+
 /// One trace event.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Event {
     /// Global ordinal: 0, 1, 2, … with no gaps.
     pub id: EventId,
-    /// rr event number at which this happened, when the trace indexes an rr
-    /// recording. Queries replay to this position.
+    /// Where this happened in an rr recording, when the trace indexes one.
+    /// Queries replay to this exact position.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub rr_event: Option<u64>,
+    pub rr: Option<RrPos>,
     /// What happened.
     #[serde(flatten)]
     pub kind: EventKind,
@@ -356,11 +373,7 @@ impl Event {
     /// An event without an rr position.
     #[must_use]
     pub fn new(id: EventId, kind: EventKind) -> Self {
-        Self {
-            id,
-            rr_event: None,
-            kind,
-        }
+        Self { id, rr: None, kind }
     }
 }
 

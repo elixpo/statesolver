@@ -33,5 +33,26 @@ pub enum Error {
     Symbols(String),
 }
 
+/// On hybrid Intel CPUs (P-cores and E-cores), rr's branch counter only
+/// works on the performance cores, and rr binds to a random CPU by default:
+/// on an E-core it aborts with "Got 0 branch events". Returns a performance
+/// core to pass as `rr record --bind-to-cpu`, or `None` on non-hybrid
+/// machines. Replay runs on the CPU stored in the trace, so only recording
+/// needs it.
+#[must_use]
+pub fn performance_core() -> Option<u32> {
+    let list = std::fs::read_to_string("/sys/devices/cpu_core/cpus").ok()?;
+    let first = list.trim().split([',', '-']).next()?;
+    first.parse().ok()
+}
+
+/// Arguments to put after `rr record` for a reliable recording on this machine.
+#[must_use]
+pub fn rr_record_args() -> Vec<String> {
+    performance_core()
+        .map(|c| vec![format!("--bind-to-cpu={c}")])
+        .unwrap_or_default()
+}
+
 /// Convenience alias.
 pub type Result<T, E = Error> = std::result::Result<T, E>;

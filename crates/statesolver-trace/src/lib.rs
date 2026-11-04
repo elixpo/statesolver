@@ -26,7 +26,7 @@ use std::path::Path;
 pub use bytes::Bytes;
 pub use event::{
     AllocId, AllocKind, Epoch, Event, EventId, EventKind, FORMAT_NAME, FORMAT_VERSION, Header,
-    MapOp, MemWrite, Program, Reg, Region,
+    MapOp, MemWrite, Program, Reg, Region, RrPos,
 };
 pub use validate::{Rule, Validator, Violation};
 
