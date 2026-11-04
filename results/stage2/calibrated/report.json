@@ -130,6 +130,9 @@
     "oracle_gain_over_best_fixed": 0.0,
     "heterogeneity_gain": 0.0,
     "switching_gain": 0.0,
+    "ideal_headroom": 0.004616267380100689,
+    "blocked_by_migration_cost": 0.004603375098722008,
+    "needs_finer_granularity": 0.000012892281378681912,
     "contexts_switching": 0.0
   },
   {
@@ -263,6 +266,9 @@
     "oracle_gain_over_best_fixed": 0.0,
     "heterogeneity_gain": 0.0,
     "switching_gain": 0.0,
+    "ideal_headroom": 0.19490467270712544,
+    "blocked_by_migration_cost": 0.1942844070244948,
+    "needs_finer_granularity": 0.0006202656826306666,
     "contexts_switching": 0.0
   },
   {
@@ -396,6 +402,9 @@
     "oracle_gain_over_best_fixed": 4.649592702429085e-6,
     "heterogeneity_gain": 4.649592702429085e-6,
     "switching_gain": 0.0,
+    "ideal_headroom": 0.11144126295052642,
+    "blocked_by_migration_cost": 0.11143939496122882,
+    "needs_finer_granularity": 1.8679892976023742e-6,
     "contexts_switching": 0.0
   },
   {
@@ -529,6 +538,9 @@
     "oracle_gain_over_best_fixed": 0.0,
     "heterogeneity_gain": 0.0,
     "switching_gain": 0.0,
+    "ideal_headroom": 0.007608821553322271,
+    "blocked_by_migration_cost": 0.007602011034288237,
+    "needs_finer_granularity": 6.8105190340334e-6,
     "contexts_switching": 0.0
   },
   {
@@ -662,6 +674,9 @@
     "oracle_gain_over_best_fixed": 0.003026484922871102,
     "heterogeneity_gain": 0.003026484922871102,
     "switching_gain": 0.0,
+    "ideal_headroom": 0.006331022897450469,
+    "blocked_by_migration_cost": 0.006331021648507931,
+    "needs_finer_granularity": 1.2489425372419548e-9,
     "contexts_switching": 0.0
   },
   {
@@ -795,6 +810,9 @@
     "oracle_gain_over_best_fixed": 0.2875459400532136,
     "heterogeneity_gain": 0.2875459400532136,
     "switching_gain": 0.0,
+    "ideal_headroom": 0.16687040807545359,
+    "blocked_by_migration_cost": 0.16683437796397374,
+    "needs_finer_granularity": 0.00003603011147983731,
     "contexts_switching": 0.0
   },
   {
@@ -928,6 +946,9 @@
     "oracle_gain_over_best_fixed": 0.00010836076450734052,
     "heterogeneity_gain": 0.00010836076450734052,
     "switching_gain": 0.0,
+    "ideal_headroom": 0.03398444221516459,
+    "blocked_by_migration_cost": 0.0339734429375553,
+    "needs_finer_granularity": 0.000010999277609298243,
     "contexts_switching": 0.0
   },
   {
@@ -1061,6 +1082,9 @@
     "oracle_gain_over_best_fixed": 0.07128573283251236,
     "heterogeneity_gain": 0.07128573283251236,
     "switching_gain": 0.0,
+    "ideal_headroom": 0.23656647434036196,
+    "blocked_by_migration_cost": 0.23654278432406636,
+    "needs_finer_granularity": 0.00002369001629557944,
     "contexts_switching": 0.0
   },
   {
@@ -1194,6 +1218,9 @@
     "oracle_gain_over_best_fixed": 0.04798757040630977,
     "heterogeneity_gain": 0.04798757040630977,
     "switching_gain": 0.0,
+    "ideal_headroom": 0.017048741023341755,
+    "blocked_by_migration_cost": 0.01704278645885465,
+    "needs_finer_granularity": 5.954564487104385e-6,
     "contexts_switching": 0.0
   },
   {
@@ -1327,6 +1354,9 @@
     "oracle_gain_over_best_fixed": 1.6776387444952455e-6,
     "heterogeneity_gain": 1.6776387444952455e-6,
     "switching_gain": 0.0,
+    "ideal_headroom": 0.019009005676574868,
+    "blocked_by_migration_cost": 0.01900900418511004,
+    "needs_finer_granularity": 1.491464829749027e-9,
     "contexts_switching": 0.0
   },
   {
@@ -1460,6 +1490,9 @@
     "oracle_gain_over_best_fixed": 0.0,
     "heterogeneity_gain": 0.0,
     "switching_gain": 0.0,
+    "ideal_headroom": 0.007750927106676197,
+    "blocked_by_migration_cost": 0.007747109278321791,
+    "needs_finer_granularity": 3.817828354405373e-6,
     "contexts_switching": 0.0
   }
 ]

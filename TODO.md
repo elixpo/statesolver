@@ -22,10 +22,14 @@ Findings go in [DISCOVERIES.md](DISCOVERIES.md), not here.
 - [x] `morphstack calibrate`: measured first touch, copy, mmap/munmap, and segment/frame malloc/free ([results/profiles](results/profiles))
 - [x] Memory price documented as an economic regime, not a measurement ([docs/simulator.md](docs/simulator.md))
 - [x] Measured `segmented.boundary_ns` = 0.93 ns with safe `corosensei::on_stack` (threshold was about 100–120 ns), so the switching gain is 0% on every workload
-- [ ] **Research-direction decision**: pivot the headline to online per-context selection, or test per-activation granularity and real traces first (see DISCOVERIES)
+- [ ] **Research-direction decision**: test first, then decide (chosen 2026-11-04)
+  - [x] Granularity: ideal and free-migration bounds show finer granularity is worth at most 0.1%
+  - [x] Headroom is blocked by acquire and release, and in the end by page faults for fresh stacks; warm pools revive switching (W2 15%, W6 8%)
+  - [ ] Model a stack pool explicitly, with resident pool memory priced
+  - [ ] A real trace (Python 3.12 `sys.monitoring` asyncio capture: exact per-coroutine call, return, yield, and resume)
 - [ ] Per-context timeline output (`sim --timeline`) for paper graph 5
 - [ ] Calibrate on aarch64 macOS as a second machine
-- [ ] Real traces: a Tokio HTTP server under load, Go `runtime/trace`, and possibly Python asyncio, each with a converter
+- [ ] Real traces: Python asyncio via `sys.monitoring` first. Tokio and Go traces do not record call depth (Rust tasks are state machines; Go's trace has no stack depth).
 - [ ] Go/no-go criterion 2: the oracle beats the best fixed policy by more than 10% on at least one **real** trace
 - [x] `docs/simulator.md` covering model assumptions, decision granularity, the separability condition for oracle exactness, and memory regimes
 - [ ] A finer static baseline D. It currently equals always-heap on every workload.

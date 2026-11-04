@@ -133,3 +133,18 @@ fn baselines_are_priced_consistently() {
         assert!(close(o.time_share.iter().sum(), 1.0));
     }
 }
+
+#[test]
+fn ideal_bound_is_below_the_oracle() {
+    let m = CostModel::default();
+    for g in Gen::ALL {
+        let w = load(g, 9);
+        let bound = morphstack_sim::ideal_bound(&m, &w).total();
+        let best = price(&m, &w, &oracle::solve(&m, &w)).cost.total();
+        assert!(
+            bound <= best * (1.0 + 1e-12),
+            "{}: bound {bound} > oracle {best}",
+            g.name()
+        );
+    }
+}

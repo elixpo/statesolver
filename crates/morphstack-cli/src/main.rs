@@ -357,6 +357,13 @@ struct SimReport {
     heterogeneity_gain: f64,
     /// Share of the oracle's gain that needs switching over time.
     switching_gain: f64,
+    /// Headroom between hindsight-static and the ideal bound (free migration,
+    /// any granularity), relative to the best fixed policy.
+    ideal_headroom: f64,
+    /// Part of the headroom blocked only by migration cost (static → free-migration bound).
+    blocked_by_migration_cost: f64,
+    /// Part of the headroom only finer-grained mixing could reach (free-migration → ideal bound).
+    needs_finer_granularity: f64,
     /// Oracle schedule share of contexts that migrate at least once.
     contexts_switching: f64,
 }
@@ -412,6 +419,12 @@ fn simulate(name: &str, model: &CostModel, w: &Workload) -> SimReport {
         best_fixed: best_fixed.0,
         oracle_gain_over_best_fixed: (best_fixed.1 - best) / best_fixed.1,
         heterogeneity_gain: (best_fixed.1 - stat) / best_fixed.1,
+        ideal_headroom: (stat - morphstack_sim::ideal_bound(model, w).total()) / best_fixed.1,
+        blocked_by_migration_cost: (stat - morphstack_sim::free_migration_bound(model, w))
+            / best_fixed.1,
+        needs_finer_granularity: (morphstack_sim::free_migration_bound(model, w)
+            - morphstack_sim::ideal_bound(model, w).total())
+            / best_fixed.1,
         switching_gain: (stat - best) / best_fixed.1,
         contexts_switching,
         rows,
@@ -508,7 +521,7 @@ fn characterize(
     )?;
     writeln!(
         md,
-        "| Workload | A contig | B seg | C heap | D static | F hindsight-static | Oracle | Best fixed | Oracle gain | from heterogeneity | from switching | Ctx switching |\n|---|---|---|---|---|---|---|---|---|---|---|---|"
+        "| Workload | A contig | B seg | C heap | D static | F hindsight-static | Oracle | Best fixed | Oracle gain | from heterogeneity | from switching | Ideal headroom | blocked by migration cost | needs finer granularity | Ctx switching |\n|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|"
     )?;
     for r in &reports {
         let t: Vec<String> = r
@@ -518,12 +531,15 @@ fn characterize(
             .collect();
         writeln!(
             md,
-            "| {} | {} | {:.1}% | {:.1}% | {:.1}% | {:.1}% |",
+            "| {} | {} | {:.1}% | {:.1}% | {:.1}% | {:.1}% | {:.1}% | {:.1}% | {:.1}% |",
             r.trace,
             t.join(" | ") + " | " + r.best_fixed.split_whitespace().nth(1).unwrap_or(""),
             r.oracle_gain_over_best_fixed * 100.0,
             r.heterogeneity_gain * 100.0,
             r.switching_gain * 100.0,
+            r.ideal_headroom * 100.0,
+            r.blocked_by_migration_cost * 100.0,
+            r.needs_finer_granularity * 100.0,
             r.contexts_switching * 100.0
         )?;
     }

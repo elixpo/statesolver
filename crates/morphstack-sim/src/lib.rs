@@ -334,3 +334,47 @@ pub fn hindsight_static(model: &CostModel, w: &Workload) -> Schedule {
         })
         .collect()
 }
+
+/// Upper bound on what *any* representation scheme can achieve under this
+/// cost model, at any granularity (per context, per activation, per
+/// segment), with free and instantaneous migration: every step pays the
+/// cheapest execution and growth cost of any representation **plus** the
+/// smallest memory cost of any representation, even when they come from
+/// different representations.
+///
+/// The gap between [`hindsight_static`] and this bound is the headroom left
+/// for switching over time and for finer-grained mixing.
+#[must_use]
+pub fn ideal_bound(model: &CostModel, w: &Workload) -> Breakdown {
+    let mut total = Breakdown::default();
+    for c in &w.contexts {
+        for s in &c.steps {
+            let costs = Rep::ALL.map(|r| model.step(r, s));
+            total.exec += costs
+                .iter()
+                .map(|b| b.exec + b.growth)
+                .fold(f64::INFINITY, f64::min);
+            total.memory += costs.iter().map(|b| b.memory).fold(f64::INFINITY, f64::min);
+        }
+    }
+    total
+}
+
+/// Free-migration bound: each step uses the single cheapest representation
+/// for that step, and migrations cost nothing (no release, acquire, or
+/// copy). The gap from [`hindsight_static`] to this bound is what migration
+/// costs prevent; the gap from this bound to [`ideal_bound`] is what only
+/// mixing representations *within* a step (finer granularity) could win.
+#[must_use]
+pub fn free_migration_bound(model: &CostModel, w: &Workload) -> f64 {
+    w.contexts
+        .iter()
+        .flat_map(|c| &c.steps)
+        .map(|s| {
+            Rep::ALL
+                .iter()
+                .map(|&r| model.step(r, s).total())
+                .fold(f64::INFINITY, f64::min)
+        })
+        .sum()
+}

@@ -5,6 +5,25 @@ Each entry: **date**, the finding, the evidence (a commit or file), and what it 
 
 ---
 
+## 2026-11-04: Finer granularity cannot help; switching depends on page faults for fresh stacks
+
+- **Test 1, granularity:** two new bounds on the calibrated profile.
+  - **Ideal bound:** at every step, the cheapest execution cost of any representation plus the cheapest memory cost of any representation, with free migration. No scheme at any granularity can do better.
+  - **Free-migration bound:** the best pure representation at every step, with free migration.
+
+  The gap between the two, which is what only per-activation or per-segment *mixing* could win, is **0.0–0.1% on every workload**. All of the headroom over F (up to 24% on burst, about 20% on W2, 17% on W6, 11% on W3) is blocked by **migration cost**.
+- **Test 2, which migration cost:** the copy and fix-up mechanism doesn't matter (the oracle migrates at low points), so the remaining candidates are acquire and release. Replacing `mmap`/`munmap` (425/678 ns) with a stack pool (20/15 ns):
+
+  | Profile | W2 switching | W6 switching / total |
+  |---|---|---|
+  | mmap (calibrated) | 0% | 0% / 28.8% |
+  | Pool, page faults kept | 0% | 0% / 28.8% |
+  | **Pool, warm stacks (no first-touch)** | **15.4%** | **7.7% / 36.5%** |
+
+- **Conclusion:** at context granularity, whether switching over time pays depends on one thing: **whether migrating into a contiguous stack can avoid page-faulting fresh memory**. Warm stacks from a pool bring it back (W2 15%, W6 8%). Fresh memory removes it. This is a sharp, testable condition for the paper.
+- **Caveat:** a pool of warm, deep stacks holds resident memory that the model does not yet charge for, so the warm-pool numbers are an optimistic upper bound. Next step: model the pool explicitly, with pooled bytes priced at the memory price.
+- **Evidence:** `ideal_bound`, `free_migration_bound`, and the columns in [results/stage2/calibrated/report.md](results/stage2/calibrated/report.md).
+
 ## 2026-11-04: A segment-boundary crossing costs about 1 ns, so per-context switching over time is worth nothing on this machine
 
 - **Finding:** Switching onto a cached segment and back with `corosensei::on_stack` costs **0.93 ns per crossing** (median of 9 repeats, range 0.88–1.16 ns), about 100× below the 100–120 ns threshold at which switching starts to pay. With every measurable parameter calibrated, **the oracle never migrates a context on any workload: the switching gain is 0.0%.** The heterogeneity gain remains: W6 28.8%, burst 7.1%, mixed 4.8%.
