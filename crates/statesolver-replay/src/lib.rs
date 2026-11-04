@@ -11,6 +11,7 @@
 #![cfg(target_os = "linux")]
 
 pub mod index;
+pub mod queries;
 pub mod rsp;
 pub mod session;
 

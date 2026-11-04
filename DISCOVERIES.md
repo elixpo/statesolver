@@ -6,6 +6,16 @@ MorphStack's log is archived at [docs/archive/morphstack/DISCOVERIES.md](docs/ar
 
 ---
 
+## 2026-11-04: Reverse watchpoints stop on the writer before it executes; bug 001 has two stale writes
+
+- **Finding:** in rr 5.9, reverse-continue with a write watchpoint stops **on** the writing instruction, before it executes. The location still holds the old value, the writer's address and source registers are readable, and one forward step shows the new value. Reverse-continuing from a crash first re-reports the pending signal at the same position, and the engine skips it.
+- **On bug 001** the primitives recover the full mechanism from the crash:
+  1. The last writer of `Handler.run` is `memcpy`'s `mov [rdi],rsi`, changing `greet+0x18` to `0x4141…`.
+  2. Before it, `mov byte [rax],0x41` (`s.cached_user->name[0] = 'A'`) changed `greet` to `greet+0x18`.
+  3. That `rax` came from `mov rax,[rbp-20h]`, a load of `s.cached_user`, and equals the reused address.
+
+  An address-only tool stops at step 1. The epoch question is step 3: the pointer *value* was produced while allocation #0 (epoch 1) owned the address, but it is dereferenced while #1 (epoch 2) owns it.
+
 ## 2026-11-04: On hybrid CPUs rr must be pinned to a P-core; positions need the stack pointer
 
 - **Finding 1:** `rr record` binds to a random CPU. On this hybrid i5-13450HX (P-cores 0–11, E-cores 12–15), landing on an E-core gives `FATAL check_working_counters: Got 0 branch events`, and rr leaves an `incomplete` trace. Earlier runs passed by luck, which made the replay tests look flaky. Fix: `rr record --bind-to-cpu=<first P-core>` from `/sys/devices/cpu_core/cpus` (`statesolver_replay::rr_record_args`). Replay uses the CPU stored in the trace, so it follows. 10 of 10 pinned recordings were clean. `statesolver record` also rejects traces that carry rr's `incomplete` marker.

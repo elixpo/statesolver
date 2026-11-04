@@ -37,6 +37,7 @@ thiserror = "2.0"
 zstd = "0.13"
 nix = { version = "0.31", features = ["ptrace", "process", "signal", "uio", "personality"] }
 object = { version = "0.40", default-features = false, features = ["read", "std"] }
+iced-x86 = { version = "1.21", default-features = false, features = ["std", "decoder", "intel", "instr_info"] }
 statesolver-trace = { path = "crates/statesolver-trace" }
 statesolver-analysis = { path = "crates/statesolver-analysis" }
 statesolver-record = { path = "crates/statesolver-record" }

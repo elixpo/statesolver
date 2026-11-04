@@ -199,3 +199,57 @@ fn goto_lands_on_the_exact_instruction_instance() {
     let _ = std::fs::remove_dir_all(trace);
     assert!(checked >= 6, "checked {checked}");
 }
+
+#[test]
+fn causal_primitives_find_the_stale_writes_in_001() {
+    use statesolver_replay::queries::{last_writer, reg_producer};
+    use statesolver_trace::Reg;
+    let Some(trace) = rr_record("001-uaf-reuse", None) else {
+        return;
+    };
+    let mut s = statesolver_replay::Session::start(Some(&trace)).expect("rr replay");
+    let (_, events, _) = statesolver_replay::index::build(&mut s).expect("index");
+    drop(s);
+    // The Handler is the second 32-byte allocation; its first word is `run`.
+    let slot = events
+        .iter()
+        .filter_map(|e| match e.kind {
+            EventKind::Alloc { addr, size: 32, .. } => Some(addr),
+            _ => None,
+        })
+        .nth(1)
+        .expect("handler allocation");
+    let crash = events.last().and_then(|e| e.rr).expect("crash position");
+
+    let mut s = statesolver_replay::Session::start(Some(&trace)).expect("rr replay");
+    let w1 = last_writer(&mut s, slot, 8, crash)
+        .unwrap()
+        .expect("a write");
+    assert_eq!(w1.after, 0x4141_4141_4141_4141u64.to_le_bytes(), "{w1:?}");
+    assert!(w1.insn.text.starts_with("mov"), "{}", w1.insn.text);
+
+    let w2 = last_writer(&mut s, slot, 8, w1.pos)
+        .unwrap()
+        .expect("an earlier write");
+    assert!(
+        w2.insn.text.contains("byte"),
+        "the name[0] = 'A' store: {}",
+        w2.insn.text
+    );
+    assert_eq!(w2.after[0], 0x41);
+    assert_eq!(w2.insn.address_regs.len(), 1);
+
+    // The pointer used by the byte store came from a load (s.cached_user).
+    let base = statesolver_trace::Reg::from_name(&w2.insn.address_regs[0]).expect("gp register");
+    let def = reg_producer(&mut s, base, w2.pos, 64)
+        .unwrap()
+        .expect("producer");
+    assert!(def.insn.text.contains(",[rbp"), "a stack load: {}", def.insn.text);
+    assert_eq!(
+        def.value, slot,
+        "the stale pointer equals the reused address"
+    );
+    let _ = Reg::Rax;
+    drop(s);
+    let _ = std::fs::remove_dir_all(trace);
+}

@@ -10,6 +10,7 @@ homepage.workspace = true
 
 [target.'cfg(target_os = "linux")'.dependencies]
 object.workspace = true
+iced-x86.workspace = true
 serde.workspace = true
 statesolver-record.workspace = true
 statesolver-trace.workspace = true

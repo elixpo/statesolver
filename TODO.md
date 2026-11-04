@@ -33,7 +33,8 @@ Findings go in [DISCOVERIES.md](DISCOVERIES.md).
 
 ## Stage 3: Causal query engine (#3)
 
-- [ ] Instruction semantics (`iced-x86`); producer search through reverse execution, watchpoints, and stepping
+- [x] Causal primitives (`statesolver-replay::queries`): `last_writer` (watchpoint plus reverse-continue, stopping on the writer before it executes) and `reg_producer` (reverse-step until the register is written), with `iced-x86` decoding of read, write, and address registers
+- [ ] Provenance chain: alternate register producers and memory last-writers back to an allocation return, syscall input, or constant
 - [ ] Temporal object graph; address-only switch (arm A5)
 - [ ] `why`, `origin`, `history`, `lifetime`, `explain-crash`; evidence IDs stored with replay positions
 - [ ] Ground-truth assertions from `ROOT_CAUSE.md`; grow the corpus with real reuse bugs
