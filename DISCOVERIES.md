@@ -5,6 +5,24 @@ Each entry: **date**, the finding, the evidence (a commit or file), and what it 
 
 ---
 
+## 2026-11-04: On a real aiohttp trace, switching over time **does** pay (9% at cloud prices, 42% when memory-bound)
+
+- **Finding:** On a real trace (aiohttp 3.14.5 server and client, 1.54M events, 1,265 tasks, up to 693 parked), with the calibrated x86-64 profile and **plain mmap (no warm pool)**, the oracle beats always-segmented by:
+
+  | Memory price | Oracle gain | from switching | from heterogeneity |
+  |---|---|---|---|
+  | 0.1× | 1.7% | 0% | 1.7% |
+  | 1× | **9.9%** | **9.1%** | 0.8% |
+  | 10× | **50.7%** | **41.6%** | 9.0% |
+  | 100× | 37.4% | 25.9% | 11.5% |
+
+- **Mechanism:** run on segmented stacks; compact parked keep-alive connections into heap frames (exact footprint, about 600 B, against a 4 KiB segment minimum); switch back to segmented on wake. 27% of contexts migrate at 1×, 71% at 10×.
+- **Why the synthetic workloads missed it:** W3, burst, and server tasks run only once after waking, so "heap from spawn" is already optimal and F captures everything. Real keep-alive connections **alternate** bursts of work with long waits, many times per context. That alternation is exactly where switching over time beats any fixed per-context choice.
+- **Go/no-go criterion 2** (more than 10% on a real trace): **met in the memory-bound regime** (50.7%); borderline at cloud prices (9.9%).
+- **Implication:** this reverses the calibrated-synthetic conclusion. The switching thesis holds for real I/O-heavy servers in memory-sensitive regimes. Next: add a synthetic workload that captures the keep-alive alternation, and capture more real traces (more frameworks, more load shapes).
+- **Caveats:** one trace, one framework, CPython. Tracer overhead correction is approximate for compute time. CPython's own frame layout is not what we model: the trace gives the *logical* activation structure, priced as if a MorphStack runtime were executing it.
+- **Evidence:** [results/stage2/real-traces.md](results/stage2/real-traces.md), and `scripts/capture/`.
+
 ## 2026-11-04: Switching survives through one shared warm stack; the oracle rediscovers the Cog VM design
 
 - **Finding:** On W6, the warm-pool oracle runs CPU phases on a contiguous stack and compacts each worker into segments when it parks. On a single core only one worker runs at a time, so the pool's peak is **one 512 KB stack (0.5 MiB)** shared by all 32 workers.

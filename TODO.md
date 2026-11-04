@@ -27,11 +27,15 @@ Findings go in [DISCOVERIES.md](DISCOVERIES.md), not here.
   - [x] Headroom is blocked by acquire and release, and in the end by page faults for fresh stacks; warm pools revive switching (W2 15%, W6 8%)
   - [x] Scratch check: W6 keeps about 7% net switching gain with a shared warm pool (peak 0.5 MiB) after pricing pool memory; W2's warm gain is unattainable (single context)
   - [ ] Make the stack pool a first-class part of the simulator (global pool state, priced resident bytes, N cores)
-  - [ ] A real trace (Python 3.12 `sys.monitoring` asyncio capture: exact per-coroutine call, return, yield, and resume)
+  - [x] Real trace: aiohttp via `sys.monitoring` shows switching 9.1% at 1× and 41.6% at 10× memory price ([results/stage2/real-traces.md](results/stage2/real-traces.md))
+  - [ ] **Decide the headline**: the evidence now supports switching over time for real I/O servers in memory-sensitive regimes
 - [ ] Per-context timeline output (`sim --timeline`) for paper graph 5
 - [ ] Calibrate on aarch64 macOS as a second machine
-- [ ] Real traces: Python asyncio via `sys.monitoring` first. Tokio and Go traces do not record call depth (Rust tasks are state machines; Go's trace has no stack depth).
-- [ ] Go/no-go criterion 2: the oracle beats the best fixed policy by more than 10% on at least one **real** trace
+- [x] Real-trace capture: `scripts/capture/py_trace.py` (Python 3.12+ `sys.monitoring`) plus an aiohttp phase workload
+- [ ] More real traces: other frameworks (FastAPI/uvicorn, websockets), other load shapes, larger scale. Tokio and Go traces do not record call depth.
+- [ ] Host trace files outside git (release assets or a Hugging Face dataset), with SHA-256 sums
+- [ ] A synthetic keep-alive workload: contexts that alternate work bursts with long waits many times
+- [x] Go/no-go criterion 2: met in the memory-bound regime (50.7%); 9.9% at cloud prices
 - [x] `docs/simulator.md` covering model assumptions, decision granularity, the separability condition for oracle exactness, and memory regimes
 - [ ] A finer static baseline D. It currently equals always-heap on every workload.
 - [ ] Shared memory-pressure term (non-linear) and an oracle lower bound under coupling
