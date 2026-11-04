@@ -46,6 +46,7 @@ Findings go in [DISCOVERIES.md](DISCOVERIES.md).
 
 ## Stage 4: Study instrument and pilot (#4)
 
+- [ ] **Environment (maintainer):** model API access, a machine with a PMU and 32 GB RAM and 300–500 GB disk, and a second annotator. See [docs/study/ENVIRONMENT.md](docs/study/ENVIRONMENT.md)
 - [ ] `statesolver mcp`; FACT/INFERENCE/HYPOTHESIS model; claim-citation protocol in every arm
 - [ ] Arms A0–A5 with matched budgets; Crumb runner plus one other harness; 3 or more models
 - [ ] SEC-bench, ARVO/T2L-ARVO, and VulnLoc loaders; rr recording of each; annotation tooling with κ
