@@ -1,0 +1,51 @@
+name = "calibrated linux x86_64 / 13th Gen Intel(R) Core(TM) i5-13450HX"
+migration = [
+    [
+    { fixed_ns = 0.0, ns_per_byte = 0.0, ns_per_frame = 0.0 },
+    { fixed_ns = 50.0, ns_per_byte = 0.015392187118530274, ns_per_frame = 2.0 },
+    { fixed_ns = 50.0, ns_per_byte = 0.015392187118530274, ns_per_frame = 6.0 },
+],
+    [
+    { fixed_ns = 50.0, ns_per_byte = 0.015392187118530274, ns_per_frame = 2.0 },
+    { fixed_ns = 0.0, ns_per_byte = 0.0, ns_per_frame = 0.0 },
+    { fixed_ns = 50.0, ns_per_byte = 0.015392187118530274, ns_per_frame = 6.0 },
+],
+    [
+    { fixed_ns = 50.0, ns_per_byte = 0.015392187118530274, ns_per_frame = 6.0 },
+    { fixed_ns = 50.0, ns_per_byte = 0.015392187118530274, ns_per_frame = 6.0 },
+    { fixed_ns = 0.0, ns_per_byte = 0.0, ns_per_frame = 0.0 },
+],
+]
+migration_scale = 1.0
+
+[common]
+call_ns = 1.5
+return_ns = 1.0
+switch_ns = 25.0
+
+[contiguous]
+min_stack_bytes = 8192
+check_ns = 0.2
+alloc_ns = 403.849
+free_ns = 676.1795
+grow_fixed_ns = 250.0
+copy_ns_per_byte = 0.015392187118530274
+touch_ns_per_byte = 0.2453555017709732
+
+[segmented]
+segment_bytes = 4096
+header_bytes = 32
+check_ns = 0.4
+alloc_ns = 11.14503125
+free_ns = 7.74134375
+boundary_ns = 15.0
+
+[heap]
+header_bytes = 16
+context_bytes = 64
+alloc_ns = 9.20415625
+free_ns = 5.399109375
+locality_ns = 2.5
+
+[memory]
+ns_per_byte_second = 0.125

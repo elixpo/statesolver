@@ -1,0 +1,111 @@
+w1-nested: 1 contexts, 281134 steps, profile calibrated linux x86_64 / 13th Gen Intel(R) Core(TM) i5-13450HX
+  policy                    total ms       exec     growth     memory    migrate    migr #  peak MiB   regret  share C/S/H
+  A always-contiguous          0.381      0.381      0.001      0.000      0.000         0       0.0     0.0%  100/0/0
+  B always-segmented           0.408      0.408      0.000      0.000      0.000         0       0.0     6.9%  0/100/0
+  C always-heap                2.756      2.756      0.000      0.000      0.000         0       0.0   622.7%  0/0/100
+  D static-can-suspend         2.756      2.756      0.000      0.000      0.000         0       0.0   622.7%  0/0/100
+  F hindsight-static           0.381      0.381      0.001      0.000      0.000         0       0.0     0.0%  100/0/0
+  E oracle                     0.381      0.381      0.001      0.000      0.000         0       0.0     0.0%  100/0/0
+  best fixed: A always-contiguous; oracle gain over it: 0.00% (heterogeneity 0.00% + switching 0.00%); contexts the oracle migrates: 0.0%
+
+w2-deep: 1 contexts, 200004 steps, profile calibrated linux x86_64 / 13th Gen Intel(R) Core(TM) i5-13450HX
+  policy                    total ms       exec     growth     memory    migrate    migr #  peak MiB   regret  share C/S/H
+  A always-contiguous          1.915      0.271      1.644      0.000      0.000         0       4.0   352.2%  100/0/0
+  B always-segmented           0.424      0.290      0.133      0.000      0.000         0       2.2     0.0%  0/100/0
+  C always-heap                1.960      1.960      0.000      0.000      0.000         0       2.4   362.9%  0/0/100
+  D static-can-suspend         1.960      1.960      0.000      0.000      0.000         0       2.4   362.9%  0/0/100
+  F hindsight-static           0.424      0.290      0.133      0.000      0.000         0       2.2     0.0%  0/100/0
+  E oracle                     0.424      0.290      0.133      0.000      0.000         0       2.2     0.0%  0/100/0
+  best fixed: B always-segmented; oracle gain over it: 0.00% (heterogeneity 0.00% + switching 0.00%); contexts the oracle migrates: 0.0%
+
+w3-shallow-massive: 100001 contexts, 800004 steps, profile calibrated linux x86_64 / 13th Gen Intel(R) Core(TM) i5-13450HX
+  policy                    total ms       exec     growth     memory    migrate    migr #  peak MiB   regret  share C/S/H
+  A always-contiguous        463.709    113.544      9.423    340.742      0.000         0     781.3  1429.6%  100/0/0
+  B always-segmented         179.171      7.469      0.000    171.702      0.000         0     393.7   491.0%  0/100/0
+  C always-heap               30.316     10.381      0.000     19.935      0.000         0      45.8     0.0%  0/0/100
+  D static-can-suspend        30.316     10.381      0.000     19.935      0.000         0      45.8     0.0%  0/0/100
+  F hindsight-static          30.316     10.380      0.000     19.935      0.000         0      45.9     0.0%  0/0/100
+  E oracle                    30.316     10.380      0.000     19.935      0.000         0      45.9     0.0%  0/0/100
+  best fixed: C always-heap; oracle gain over it: 0.00% (heterogeneity 0.00% + switching 0.00%); contexts the oracle migrates: 0.0%
+
+w4-frequent-suspend: 65 contexts, 768260 steps, profile calibrated linux x86_64 / 13th Gen Intel(R) Core(TM) i5-13450HX
+  policy                    total ms       exec     growth     memory    migrate    migr #  peak MiB   regret  share C/S/H
+  A always-contiguous          7.192      7.162      0.022      0.009      0.000         0       0.5     0.6%  100/0/0
+  B always-segmented           7.148      7.144      0.000      0.004      0.000         0       0.3     0.0%  0/100/0
+  C always-heap               11.422     11.421      0.000      0.001      0.000         0       0.1    59.8%  0/0/100
+  D static-can-suspend        11.422     11.421      0.000      0.001      0.000         0       0.1    59.8%  0/0/100
+  F hindsight-static           7.148      7.144      0.000      0.004      0.000         0       0.3     0.0%  0/100/0
+  E oracle                     7.148      7.144      0.000      0.004      0.000         0       0.3     0.0%  0/100/0
+  best fixed: B always-segmented; oracle gain over it: 0.00% (heterogeneity 0.00% + switching 0.00%); contexts the oracle migrates: 0.0%
+
+w5-long-suspend: 10001 contexts, 560730 steps, profile calibrated linux x86_64 / 13th Gen Intel(R) Core(TM) i5-13450HX
+  policy                    total ms       exec     growth     memory    migrate    migr #  peak MiB   regret  share C/S/H
+  A always-contiguous        986.958     12.004     27.067    947.887      0.000         0     106.6    44.3%  100/0/0
+  B always-segmented         828.625      1.444      0.666    826.515      0.000         0      93.0    21.1%  0/100/0
+  C always-heap              686.201      5.750      0.000    680.451      0.000         0      76.6     0.3%  0/0/100
+  D static-can-suspend       686.201      5.750      0.000    680.451      0.000         0      76.6     0.3%  0/0/100
+  F hindsight-static         684.158      5.276      0.050    678.832      0.000         0      76.4     0.0%  0/10/90
+  E oracle                   684.158      5.276      0.050    678.832      0.000         0      76.4     0.0%  0/10/90
+  best fixed: C always-heap; oracle gain over it: 0.30% (heterogeneity 0.30% + switching 0.00%); contexts the oracle migrates: 0.0%
+
+w6-phase-change: 20033 contexts, 2262228 steps, profile calibrated linux x86_64 / 13th Gen Intel(R) Core(TM) i5-13450HX
+  policy                    total ms       exec     growth     memory    migrate    migr #  peak MiB   regret  share C/S/H
+  A always-contiguous         44.534     25.589      8.771     10.175      0.000         0      65.4   536.2%  100/0/0
+  B always-segmented           9.515      4.549      1.401      3.565      0.000         0      25.5    35.9%  0/100/0
+  C always-heap               23.146     22.685      0.000      0.461      0.000         0       3.5   230.7%  0/0/100
+  D static-can-suspend        23.146     22.685      0.000      0.461      0.000         0       3.5   230.7%  0/0/100
+  F hindsight-static           7.000      5.131      1.401      0.468      0.000         0       3.5     0.0%  0/1/99
+  E oracle                     7.000      5.131      1.401      0.468      0.000         0       3.5     0.0%  0/1/99
+  best fixed: B always-segmented; oracle gain over it: 26.43% (heterogeneity 26.43% + switching 0.00%); contexts the oracle migrates: 0.0%
+
+server: 20001 contexts, 756438 steps, profile calibrated linux x86_64 / 13th Gen Intel(R) Core(TM) i5-13450HX
+  policy                    total ms       exec     growth     memory    migrate    migr #  peak MiB   regret  share C/S/H
+  A always-contiguous         34.231     25.397      8.765      0.069      0.000         0       0.8   702.3%  100/0/0
+  B always-segmented           4.267      4.232      0.000      0.035      0.000         0       0.4     0.0%  0/100/0
+  C always-heap                9.139      9.132      0.000      0.008      0.000         0       0.1   114.2%  0/0/100
+  D static-can-suspend         9.139      9.132      0.000      0.008      0.000         0       0.1   114.2%  0/0/100
+  F hindsight-static           4.267      4.233      0.000      0.034      0.000         0       0.4     0.0%  0/99/1
+  E oracle                     4.267      4.233      0.000      0.034      0.000         0       0.4     0.0%  0/99/1
+  best fixed: B always-segmented; oracle gain over it: 0.01% (heterogeneity 0.01% + switching 0.00%); contexts the oracle migrates: 0.0%
+
+burst: 50001 contexts, 400024 steps, profile calibrated linux x86_64 / 13th Gen Intel(R) Core(TM) i5-13450HX
+  policy                    total ms       exec     growth     memory    migrate    migr #  peak MiB   regret  share C/S/H
+  A always-contiguous         65.556     56.773      5.493      3.290      0.000         0      40.2  1210.3%  100/0/0
+  B always-segmented           5.393      3.735      0.000      1.658      0.000         0      20.3     7.8%  0/100/0
+  C always-heap                5.409      5.191      0.000      0.218      0.000         0       2.7     8.1%  0/0/100
+  D static-can-suspend         5.409      5.191      0.000      0.218      0.000         0       2.7     8.1%  0/0/100
+  F hindsight-static           5.003      4.252      0.000      0.752      0.000         0      13.9     0.0%  0/37/63
+  E oracle                     5.003      4.252      0.000      0.752      0.000         0      13.9     0.0%  0/37/63
+  best fixed: B always-segmented; oracle gain over it: 7.22% (heterogeneity 7.22% + switching 0.00%); contexts the oracle migrates: 0.0%
+
+mixed: 10009 contexts, 2983792 steps, profile calibrated linux x86_64 / 13th Gen Intel(R) Core(TM) i5-13450HX
+  policy                    total ms       exec     growth     memory    migrate    migr #  peak MiB   regret  share C/S/H
+  A always-contiguous         17.608     15.946      1.577      0.085      0.000         0       0.9   226.8%  100/0/0
+  B always-segmented           5.660      5.617      0.000      0.043      0.000         0       0.4     5.1%  0/100/0
+  C always-heap               29.933     29.926      0.000      0.008      0.000         0       0.1   455.6%  0/0/100
+  D static-can-suspend        29.933     29.926      0.000      0.008      0.000         0       0.1   455.6%  0/0/100
+  F hindsight-static           5.388      5.339      0.008      0.041      0.000         0       0.4     0.0%  0/93/7
+  E oracle                     5.388      5.339      0.008      0.041      0.000         0       0.4     0.0%  0/93/7
+  best fixed: B always-segmented; oracle gain over it: 4.81% (heterogeneity 4.81% + switching 0.00%); contexts the oracle migrates: 0.0%
+
+adv-alternating: 257 contexts, 119812 steps, profile calibrated linux x86_64 / 13th Gen Intel(R) Core(TM) i5-13450HX
+  policy                    total ms       exec     growth     memory    migrate    migr #  peak MiB   regret  share C/S/H
+  A always-contiguous          8.522      2.860      0.418      5.243      0.000         0       2.0    15.6%  100/0/0
+  B always-segmented           7.886      2.589      0.013      5.284      0.000         0       2.0     7.0%  0/100/0
+  C always-heap                7.370      2.729      0.000      4.640      0.000         0       1.8     0.0%  0/0/100
+  D static-can-suspend         7.370      2.729      0.000      4.640      0.000         0       1.8     0.0%  0/0/100
+  F hindsight-static           7.370      2.729      0.000      4.640      0.000         0       1.8     0.0%  0/0/100
+  E oracle                     7.370      2.729      0.000      4.640      0.000         0       1.8     0.0%  0/0/100
+  best fixed: C always-heap; oracle gain over it: 0.00% (heterogeneity 0.00% + switching 0.00%); contexts the oracle migrates: 0.0%
+
+adv-hot-split: 1 contexts, 200034 steps, profile calibrated linux x86_64 / 13th Gen Intel(R) Core(TM) i5-13450HX
+  policy                    total ms       exec     growth     memory    migrate    migr #  peak MiB   regret  share C/S/H
+  A always-contiguous          0.272      0.271      0.001      0.000      0.000         0       0.0     0.0%  100/0/0
+  B always-segmented           5.179      0.290      4.889      0.000      0.000         0       0.0  1802.7%  0/100/0
+  C always-heap                1.961      1.961      0.000      0.000      0.000         0       0.0   620.4%  0/0/100
+  D static-can-suspend         1.961      1.961      0.000      0.000      0.000         0       0.0   620.4%  0/0/100
+  F hindsight-static           0.272      0.271      0.001      0.000      0.000         0       0.0     0.0%  100/0/0
+  E oracle                     0.272      0.271      0.001      0.000      0.000         0       0.0     0.0%  100/0/0
+  best fixed: A always-contiguous; oracle gain over it: 0.00% (heterogeneity 0.00% + switching 0.00%); contexts the oracle migrates: 0.0%
+
+wrote results/stage2/calibrated

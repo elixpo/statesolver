@@ -19,6 +19,7 @@ morphstack-trace.workspace = true
 morphstack-workloads.workspace = true
 morphstack-cost.workspace = true
 morphstack-sim.workspace = true
+morphstack-bench.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 

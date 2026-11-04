@@ -1,0 +1,95 @@
+{
+  "machine": "linux x86_64 / 13th Gen Intel(R) Core(TM) i5-13450HX",
+  "measurements": [
+    {
+      "parameter": "contiguous.touch_ns_per_byte",
+      "value": 0.2453555017709732,
+      "min": 0.24026037752628326,
+      "max": 0.4177681505680084,
+      "unit": "ns/byte",
+      "method": "write one byte per 4 KiB page of a fresh 64 MiB anonymous map (fault + zeroing)"
+    },
+    {
+      "parameter": "contiguous.copy_ns_per_byte",
+      "value": 0.015392187118530274,
+      "min": 0.015349737167358398,
+      "max": 0.015533742904663085,
+      "unit": "ns/byte",
+      "method": "copy_from_slice of a warm 256 KiB block"
+    },
+    {
+      "parameter": "contiguous.alloc_ns",
+      "value": 403.849,
+      "min": 398.344,
+      "max": 448.4955,
+      "unit": "ns",
+      "method": "mmap of an untouched min-size stack (no guard page)"
+    },
+    {
+      "parameter": "contiguous.free_ns",
+      "value": 676.1795,
+      "min": 634.792,
+      "max": 764.245,
+      "unit": "ns",
+      "method": "munmap of an untouched min-size stack"
+    },
+    {
+      "parameter": "segmented.alloc_ns",
+      "value": 11.14503125,
+      "min": 11.00184375,
+      "max": 11.44690625,
+      "unit": "ns",
+      "method": "malloc of a segment, LIFO at depth 16 (warm allocator)"
+    },
+    {
+      "parameter": "segmented.free_ns",
+      "value": 7.74134375,
+      "min": 7.5075625,
+      "max": 9.688375,
+      "unit": "ns",
+      "method": "free of a segment, LIFO"
+    },
+    {
+      "parameter": "heap.alloc_ns",
+      "value": 9.20415625,
+      "min": 9.13540625,
+      "max": 9.318015625,
+      "unit": "ns",
+      "method": "malloc of a 128-byte frame, LIFO at depth 32 (warm allocator)"
+    },
+    {
+      "parameter": "heap.free_ns",
+      "value": 5.399109375,
+      "min": 5.315828125,
+      "max": 20.50190625,
+      "unit": "ns",
+      "method": "free of a 128-byte frame, LIFO"
+    }
+  ],
+  "not_measured": [
+    [
+      "common.call_ns / return_ns / switch_ns",
+      "needs the Stage 4 runtime"
+    ],
+    [
+      "contiguous.check_ns, segmented.check_ns, segmented.boundary_ns",
+      "needs the Stage 4 runtime"
+    ],
+    [
+      "contiguous.grow_fixed_ns",
+      "needs the Stage 4 runtime (relocation bookkeeping)"
+    ],
+    [
+      "heap.locality_ns",
+      "needs the Stage 4 runtime and hardware counters"
+    ],
+    [
+      "migration.*.fixed_ns / ns_per_frame",
+      "needs the Stage 4 migration engine"
+    ],
+    [
+      "memory.ns_per_byte_second",
+      "economic parameter, not a hardware measurement; see docs/simulator.md"
+    ]
+  ]
+}

@@ -1,0 +1,1465 @@
+[
+  {
+    "trace": "w1-nested",
+    "profile": "calibrated linux x86_64 / 13th Gen Intel(R) Core(TM) i5-13450HX",
+    "contexts": 1,
+    "steps": 281134,
+    "rows": [
+      {
+        "policy": "A always-contiguous",
+        "cost": {
+          "exec": 380608.22850097326,
+          "growth": 678.8986734002829,
+          "memory": 6.046383103995591,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 8192,
+        "mean_bytes": 8192.0,
+        "time_share": [
+          1.0,
+          0.0,
+          0.0
+        ],
+        "total_ns": 381293.17355747754,
+        "regret_vs_oracle": 0.0
+      },
+      {
+        "policy": "B always-segmented",
+        "cost": {
+          "exec": 407660.2863757967,
+          "growth": 0.0,
+          "memory": 3.0468102360062694,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 4128,
+        "mean_bytes": 4128.0,
+        "time_share": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "total_ns": 407663.3331860327,
+        "regret_vs_oracle": 0.06915980001037192
+      },
+      {
+        "policy": "C always-heap",
+        "cost": {
+          "exec": 2755567.239120469,
+          "growth": 0.0,
+          "memory": 1.057265543625144,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 3039,
+        "mean_bytes": 1432.4463376536983,
+        "time_share": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "total_ns": 2755568.296386013,
+        "regret_vs_oracle": 6.226901732009709
+      },
+      {
+        "policy": "D static-can-suspend",
+        "cost": {
+          "exec": 2755567.239120469,
+          "growth": 0.0,
+          "memory": 1.057265543625144,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 3039,
+        "mean_bytes": 1432.4463376536983,
+        "time_share": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "total_ns": 2755568.296386013,
+        "regret_vs_oracle": 6.226901732009709
+      },
+      {
+        "policy": "F hindsight-static",
+        "cost": {
+          "exec": 380608.22850097326,
+          "growth": 678.8986734002829,
+          "memory": 6.046383103995591,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 8192,
+        "mean_bytes": 8192.0,
+        "time_share": [
+          1.0,
+          0.0,
+          0.0
+        ],
+        "total_ns": 381293.17355747754,
+        "regret_vs_oracle": 0.0
+      },
+      {
+        "policy": "E oracle",
+        "cost": {
+          "exec": 380608.22850097326,
+          "growth": 678.8986734002829,
+          "memory": 6.046383103995591,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 8192,
+        "mean_bytes": 8192.0,
+        "time_share": [
+          1.0,
+          0.0,
+          0.0
+        ],
+        "total_ns": 381293.17355747754,
+        "regret_vs_oracle": 0.0
+      }
+    ],
+    "best_fixed": "A always-contiguous",
+    "oracle_gain_over_best_fixed": 0.0,
+    "heterogeneity_gain": 0.0,
+    "switching_gain": 0.0,
+    "contexts_switching": 0.0
+  },
+  {
+    "trace": "w2-deep",
+    "profile": "calibrated linux x86_64 / 13th Gen Intel(R) Core(TM) i5-13450HX",
+    "contexts": 1,
+    "steps": 200004,
+    "rows": [
+      {
+        "policy": "A always-contiguous",
+        "cost": {
+          "exec": 271082.72850045335,
+          "growth": 1643961.6745358526,
+          "memory": 376.17840537647896,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 4194304,
+        "mean_bytes": 3738312.1264957646,
+        "time_share": [
+          1.0,
+          0.0,
+          0.0
+        ],
+        "total_ns": 1915420.5814416823,
+        "regret_vs_oracle": 3.522332616026858
+      },
+      {
+        "policy": "B always-segmented",
+        "cost": {
+          "exec": 290021.78637469804,
+          "growth": 133410.91737500663,
+          "memory": 114.33360300002606,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 2262144,
+        "mean_bytes": 1136202.1010579823,
+        "time_share": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "total_ns": 423547.0373527047,
+        "regret_vs_oracle": 0.0
+      },
+      {
+        "policy": "C always-heap",
+        "cost": {
+          "exec": 1960360.7690283502,
+          "growth": 0.0,
+          "memory": 129.4498778945005,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 2563079,
+        "mean_bytes": 1286421.6589538436,
+        "time_share": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "total_ns": 1960490.2189062447,
+        "regret_vs_oracle": 3.6287426094629143
+      },
+      {
+        "policy": "D static-can-suspend",
+        "cost": {
+          "exec": 1960360.7690283502,
+          "growth": 0.0,
+          "memory": 129.4498778945005,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 2563079,
+        "mean_bytes": 1286421.6589538436,
+        "time_share": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "total_ns": 1960490.2189062447,
+        "regret_vs_oracle": 3.6287426094629143
+      },
+      {
+        "policy": "F hindsight-static",
+        "cost": {
+          "exec": 290021.78637469804,
+          "growth": 133410.91737500663,
+          "memory": 114.33360300002606,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 2262144,
+        "mean_bytes": 1136202.1010579823,
+        "time_share": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "total_ns": 423547.0373527047,
+        "regret_vs_oracle": 0.0
+      },
+      {
+        "policy": "E oracle",
+        "cost": {
+          "exec": 290021.78637469804,
+          "growth": 133410.91737500663,
+          "memory": 114.33360300002606,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 2262144,
+        "mean_bytes": 1136202.1010579823,
+        "time_share": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "total_ns": 423547.0373527047,
+        "regret_vs_oracle": 0.0
+      }
+    ],
+    "best_fixed": "B always-segmented",
+    "oracle_gain_over_best_fixed": 0.0,
+    "heterogeneity_gain": 0.0,
+    "switching_gain": 0.0,
+    "contexts_switching": 0.0
+  },
+  {
+    "trace": "w3-shallow-massive",
+    "profile": "calibrated linux x86_64 / 13th Gen Intel(R) Core(TM) i5-13450HX",
+    "contexts": 100001,
+    "steps": 800004,
+    "rows": [
+      {
+        "policy": "A always-contiguous",
+        "cost": {
+          "exec": 113543932.72827467,
+          "growth": 9422877.30944772,
+          "memory": 340742286.7704709,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 819208192,
+        "mean_bytes": 16365840.37226909,
+        "time_share": [
+          1.0,
+          0.0,
+          0.0
+        ],
+        "total_ns": 463709096.8081933,
+        "regret_vs_oracle": 14.295978121611515
+      },
+      {
+        "policy": "B always-segmented",
+        "cost": {
+          "exec": 7468659.286359039,
+          "growth": 0.0,
+          "memory": 171702167.94293532,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 412804128,
+        "mean_bytes": 8246849.250088731,
+        "time_share": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "total_ns": 179170827.22929436,
+        "regret_vs_oracle": 4.910155897726394
+      },
+      {
+        "policy": "C always-heap",
+        "cost": {
+          "exec": 10381013.89405024,
+          "growth": 0.0,
+          "memory": 19934876.233223766,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 48004741,
+        "mean_bytes": 957471.4232450293,
+        "time_share": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "total_ns": 30315890.127274007,
+        "regret_vs_oracle": 4.518599662718989e-6
+      },
+      {
+        "policy": "D static-can-suspend",
+        "cost": {
+          "exec": 10381013.89405024,
+          "growth": 0.0,
+          "memory": 19934876.233223766,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 48004741,
+        "mean_bytes": 957471.4232450293,
+        "time_share": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "total_ns": 30315890.127274007,
+        "regret_vs_oracle": 4.518599662718989e-6
+      },
+      {
+        "policy": "F hindsight-static",
+        "cost": {
+          "exec": 10380302.51176898,
+          "growth": 0.0,
+          "memory": 19935450.630753104,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 48091481,
+        "mean_bytes": 957499.0115387052,
+        "time_share": [
+          0.0,
+          3.7677203046324493e-6,
+          0.9999962322796954
+        ],
+        "total_ns": 30315753.14252208,
+        "regret_vs_oracle": 0.0
+      },
+      {
+        "policy": "E oracle",
+        "cost": {
+          "exec": 10380302.51176898,
+          "growth": 0.0,
+          "memory": 19935450.630753104,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 48091481,
+        "mean_bytes": 957499.0115387052,
+        "time_share": [
+          0.0,
+          3.7677203046324493e-6,
+          0.9999962322796954
+        ],
+        "total_ns": 30315753.14252208,
+        "regret_vs_oracle": 0.0
+      }
+    ],
+    "best_fixed": "C always-heap",
+    "oracle_gain_over_best_fixed": 4.518579245068336e-6,
+    "heterogeneity_gain": 4.518579245068336e-6,
+    "switching_gain": 0.0,
+    "contexts_switching": 0.0
+  },
+  {
+    "trace": "w4-frequent-suspend",
+    "profile": "calibrated linux x86_64 / 13th Gen Intel(R) Core(TM) i5-13450HX",
+    "contexts": 65,
+    "steps": 768260,
+    "rows": [
+      {
+        "policy": "A always-contiguous",
+        "cost": {
+          "exec": 7161577.3524995195,
+          "growth": 22172.040628537536,
+          "memory": 8578.245351423771,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 532480,
+        "mean_bytes": 521418.05890851095,
+        "time_share": [
+          1.0,
+          0.0,
+          0.0
+        ],
+        "total_ns": 7192327.6384794805,
+        "regret_vs_oracle": 0.006181873943642261
+      },
+      {
+        "policy": "B always-segmented",
+        "cost": {
+          "exec": 7143816.114374533,
+          "growth": 0.0,
+          "memory": 4322.631446615967,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 268320,
+        "mean_bytes": 262745.81874686683,
+        "time_share": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "total_ns": 7148138.745821149,
+        "regret_vs_oracle": 0.0
+      },
+      {
+        "policy": "C always-heap",
+        "cost": {
+          "exec": 11420659.424529513,
+          "growth": 0.0,
+          "memory": 1321.1891156471331,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 85073,
+        "mean_bytes": 80306.85016690729,
+        "time_share": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "total_ns": 11421980.61364516,
+        "regret_vs_oracle": 0.5978957627707673
+      },
+      {
+        "policy": "D static-can-suspend",
+        "cost": {
+          "exec": 11420659.424529513,
+          "growth": 0.0,
+          "memory": 1321.1891156471331,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 85073,
+        "mean_bytes": 80306.85016690729,
+        "time_share": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "total_ns": 11421980.61364516,
+        "regret_vs_oracle": 0.5978957627707673
+      },
+      {
+        "policy": "F hindsight-static",
+        "cost": {
+          "exec": 7143816.114374533,
+          "growth": 0.0,
+          "memory": 4322.631446615967,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 268320,
+        "mean_bytes": 262745.81874686683,
+        "time_share": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "total_ns": 7148138.745821149,
+        "regret_vs_oracle": 0.0
+      },
+      {
+        "policy": "E oracle",
+        "cost": {
+          "exec": 7143816.114374533,
+          "growth": 0.0,
+          "memory": 4322.631446615967,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 268320,
+        "mean_bytes": 262745.81874686683,
+        "time_share": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "total_ns": 7148138.745821149,
+        "regret_vs_oracle": 0.0
+      }
+    ],
+    "best_fixed": "B always-segmented",
+    "oracle_gain_over_best_fixed": 0.0,
+    "heterogeneity_gain": 0.0,
+    "switching_gain": 0.0,
+    "contexts_switching": 0.0
+  },
+  {
+    "trace": "w5-long-suspend",
+    "profile": "calibrated linux x86_64 / 13th Gen Intel(R) Core(TM) i5-13450HX",
+    "contexts": 10001,
+    "steps": 560730,
+    "rows": [
+      {
+        "policy": "A always-contiguous",
+        "cost": {
+          "exec": 12004347.828500167,
+          "growth": 27066610.860677015,
+          "memory": 947887416.9606682,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 111788032,
+        "mean_bytes": 16951999.02092248,
+        "time_share": [
+          1.0,
+          0.0,
+          0.0
+        ],
+        "total_ns": 986958375.6498454,
+        "regret_vs_oracle": 0.44258742056440553
+      },
+      {
+        "policy": "B always-segmented",
+        "cost": {
+          "exec": 1443938.236375018,
+          "growth": 666321.2912500226,
+          "memory": 826514673.2075945,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 97544640,
+        "mean_bytes": 14781371.374164691,
+        "time_share": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "total_ns": 828624932.7352196,
+        "regret_vs_oracle": 0.21115939012401425
+      },
+      {
+        "policy": "C always-heap",
+        "cost": {
+          "exec": 5750031.910703108,
+          "growth": 0.0,
+          "memory": 680450807.9215099,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 80329824,
+        "mean_bytes": 12169168.219003893,
+        "time_share": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "total_ns": 686200839.8322129,
+        "regret_vs_oracle": 0.0029852564662572567
+      },
+      {
+        "policy": "D static-can-suspend",
+        "cost": {
+          "exec": 5750031.910703108,
+          "growth": 0.0,
+          "memory": 680450807.9215099,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 80329824,
+        "mean_bytes": 12169168.219003893,
+        "time_share": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "total_ns": 686200839.8322129,
+        "regret_vs_oracle": 0.0029852564662572567
+      },
+      {
+        "policy": "F hindsight-static",
+        "cost": {
+          "exec": 5276396.909515612,
+          "growth": 49961.87525000008,
+          "memory": 678832092.606487,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 80136898,
+        "mean_bytes": 12140219.14768447,
+        "time_share": [
+          0.0,
+          0.10151662347169126,
+          0.8984833765283088
+        ],
+        "total_ns": 684158451.3912526,
+        "regret_vs_oracle": 0.0
+      },
+      {
+        "policy": "E oracle",
+        "cost": {
+          "exec": 5276396.909515612,
+          "growth": 49961.87525000008,
+          "memory": 678832092.606487,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 80136898,
+        "mean_bytes": 12140219.14768447,
+        "time_share": [
+          0.0,
+          0.10151662347169126,
+          0.8984833765283088
+        ],
+        "total_ns": 684158451.3912526,
+        "regret_vs_oracle": 0.0
+      }
+    ],
+    "best_fixed": "C always-heap",
+    "oracle_gain_over_best_fixed": 0.0029763712347826397,
+    "heterogeneity_gain": 0.0029763712347826397,
+    "switching_gain": 0.0,
+    "contexts_switching": 0.0
+  },
+  {
+    "trace": "w6-phase-change",
+    "profile": "calibrated linux x86_64 / 13th Gen Intel(R) Core(TM) i5-13450HX",
+    "contexts": 20033,
+    "steps": 2262228,
+    "rows": [
+      {
+        "policy": "A always-contiguous",
+        "cost": {
+          "exec": 25588562.440505493,
+          "growth": 8770872.804956045,
+          "memory": 10175020.089685392,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 68526080,
+        "mean_bytes": 23403795.857513696,
+        "time_share": [
+          1.0,
+          0.0,
+          0.0
+        ],
+        "total_ns": 44534455.335146934,
+        "regret_vs_oracle": 5.362382818083993
+      },
+      {
+        "policy": "B always-segmented",
+        "cost": {
+          "exec": 4548891.25037265,
+          "growth": 1400887.9619999942,
+          "memory": 3564789.4503274155,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 26708160,
+        "mean_bytes": 8199453.547522551,
+        "time_share": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "total_ns": 9514568.662700059,
+        "regret_vs_oracle": 0.35929198472240664
+      },
+      {
+        "policy": "C always-heap",
+        "cost": {
+          "exec": 22685431.83749567,
+          "growth": 0.0,
+          "memory": 460833.79311411636,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 3633784,
+        "mean_bytes": 1059974.3217431118,
+        "time_share": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "total_ns": 23146265.630609784,
+        "regret_vs_oracle": 2.3067745331731215
+      },
+      {
+        "policy": "D static-can-suspend",
+        "cost": {
+          "exec": 22685431.83749567,
+          "growth": 0.0,
+          "memory": 460833.79311411636,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 3633784,
+        "mean_bytes": 1059974.3217431118,
+        "time_share": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "total_ns": 23146265.630609784,
+        "regret_vs_oracle": 2.3067745331731215
+      },
+      {
+        "policy": "F hindsight-static",
+        "cost": {
+          "exec": 5130847.886438133,
+          "growth": 1400887.9619999942,
+          "memory": 467914.535466046,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 3622424,
+        "mean_bytes": 1076260.898778172,
+        "time_share": [
+          0.0,
+          0.007917440310721094,
+          0.9920825596892789
+        ],
+        "total_ns": 6999650.383904173,
+        "regret_vs_oracle": 0.0
+      },
+      {
+        "policy": "E oracle",
+        "cost": {
+          "exec": 5130847.886438133,
+          "growth": 1400887.9619999942,
+          "memory": 467914.535466046,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 3622424,
+        "mean_bytes": 1076260.898778172,
+        "time_share": [
+          0.0,
+          0.007917440310721094,
+          0.9920825596892789
+        ],
+        "total_ns": 6999650.383904173,
+        "regret_vs_oracle": 0.0
+      }
+    ],
+    "best_fixed": "B always-segmented",
+    "oracle_gain_over_best_fixed": 0.2643228892398574,
+    "heterogeneity_gain": 0.2643228892398574,
+    "switching_gain": 0.0,
+    "contexts_switching": 0.0
+  },
+  {
+    "trace": "server",
+    "profile": "calibrated linux x86_64 / 13th Gen Intel(R) Core(TM) i5-13450HX",
+    "contexts": 20001,
+    "steps": 756438,
+    "rows": [
+      {
+        "policy": "A always-contiguous",
+        "cost": {
+          "exec": 25396716.428497497,
+          "growth": 8765330.207878053,
+          "memory": 68730.05645516772,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 794624,
+        "mean_bytes": 541341.1588808285,
+        "time_share": [
+          1.0,
+          0.0,
+          0.0
+        ],
+        "total_ns": 34230776.69283071,
+        "regret_vs_oracle": 7.022833412978228
+      },
+      {
+        "policy": "B always-segmented",
+        "cost": {
+          "exec": 4232499.186374407,
+          "growth": 0.0,
+          "memory": 34633.505010611974,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 400416,
+        "mean_bytes": 272785.1933422925,
+        "time_share": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "total_ns": 4267132.69138502,
+        "regret_vs_oracle": 0.00010861691097758484
+      },
+      {
+        "policy": "C always-heap",
+        "cost": {
+          "exec": 9131621.682765711,
+          "growth": 0.0,
+          "memory": 7705.988406755647,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 91908,
+        "mean_bytes": 60694.96970595967,
+        "time_share": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "total_ns": 9139327.671172466,
+        "regret_vs_oracle": 1.1420286215064406
+      },
+      {
+        "policy": "D static-can-suspend",
+        "cost": {
+          "exec": 9131621.682765711,
+          "growth": 0.0,
+          "memory": 7705.988406755647,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 91908,
+        "mean_bytes": 60694.96970595967,
+        "time_share": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "total_ns": 9139327.671172466,
+        "regret_vs_oracle": 1.1420286215064406
+      },
+      {
+        "policy": "F hindsight-static",
+        "cost": {
+          "exec": 4232511.606530657,
+          "growth": 0.0,
+          "memory": 34157.65241929193,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 396624,
+        "mean_bytes": 269037.2174707807,
+        "time_share": [
+          0.0,
+          0.9850429015473521,
+          0.014957098452647956
+        ],
+        "total_ns": 4266669.258949949,
+        "regret_vs_oracle": 0.0
+      },
+      {
+        "policy": "E oracle",
+        "cost": {
+          "exec": 4232511.606530657,
+          "growth": 0.0,
+          "memory": 34157.65241929193,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 396624,
+        "mean_bytes": 269037.2174707807,
+        "time_share": [
+          0.0,
+          0.9850429015473521,
+          0.014957098452647956
+        ],
+        "total_ns": 4266669.258949949,
+        "regret_vs_oracle": 0.0
+      }
+    ],
+    "best_fixed": "B always-segmented",
+    "oracle_gain_over_best_fixed": 0.00010860511462551784,
+    "heterogeneity_gain": 0.00010860511462551784,
+    "switching_gain": 0.0,
+    "contexts_switching": 0.0
+  },
+  {
+    "trace": "burst",
+    "profile": "calibrated linux x86_64 / 13th Gen Intel(R) Core(TM) i5-13450HX",
+    "contexts": 50001,
+    "steps": 400024,
+    "rows": [
+      {
+        "policy": "A always-contiguous",
+        "cost": {
+          "exec": 56773007.72844156,
+          "growth": 5493385.780123696,
+          "memory": 3290043.0871490263,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 42188800,
+        "mean_bytes": 9715091.64421309,
+        "time_share": [
+          1.0,
+          0.0,
+          0.0
+        ],
+        "total_ns": 65556436.59571428,
+        "regret_vs_oracle": 12.10257821924436
+      },
+      {
+        "policy": "B always-segmented",
+        "cost": {
+          "exec": 3734840.5363770337,
+          "growth": 0.0,
+          "memory": 1657873.2743837088,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 21259200,
+        "mean_bytes": 4895495.398841753,
+        "time_share": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "total_ns": 5392713.810760742,
+        "regret_vs_oracle": 0.07782634610300355
+      },
+      {
+        "policy": "C always-heap",
+        "cost": {
+          "exec": 5191024.050283106,
+          "growth": 0.0,
+          "memory": 217909.9977598298,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 2800157,
+        "mean_bytes": 643461.3597299408,
+        "time_share": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "total_ns": 5408934.048042936,
+        "regret_vs_oracle": 0.08106823871890799
+      },
+      {
+        "policy": "D static-can-suspend",
+        "cost": {
+          "exec": 5191024.050283106,
+          "growth": 0.0,
+          "memory": 217909.9977598298,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 2800157,
+        "mean_bytes": 643461.3597299408,
+        "time_share": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "total_ns": 5408934.048042936,
+        "regret_vs_oracle": 0.08106823871890799
+      },
+      {
+        "policy": "F hindsight-static",
+        "cost": {
+          "exec": 4251793.694813092,
+          "growth": 0.0,
+          "memory": 751529.7350313121,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 14537721,
+        "mean_bytes": 2219174.65996077,
+        "time_share": [
+          0.0,
+          0.3710067418349319,
+          0.6289932581650681
+        ],
+        "total_ns": 5003323.429844405,
+        "regret_vs_oracle": 0.0
+      },
+      {
+        "policy": "E oracle",
+        "cost": {
+          "exec": 4251793.694813092,
+          "growth": 0.0,
+          "memory": 751529.7350313121,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 14537721,
+        "mean_bytes": 2219174.65996077,
+        "time_share": [
+          0.0,
+          0.3710067418349319,
+          0.6289932581650681
+        ],
+        "total_ns": 5003323.429844405,
+        "regret_vs_oracle": 0.0
+      }
+    ],
+    "best_fixed": "B always-segmented",
+    "oracle_gain_over_best_fixed": 0.07220675796652498,
+    "heterogeneity_gain": 0.07220675796652498,
+    "switching_gain": 0.0,
+    "contexts_switching": 0.0
+  },
+  {
+    "trace": "mixed",
+    "profile": "calibrated linux x86_64 / 13th Gen Intel(R) Core(TM) i5-13450HX",
+    "contexts": 10009,
+    "steps": 2983792,
+    "rows": [
+      {
+        "policy": "A always-contiguous",
+        "cost": {
+          "exec": 15946300.156515567,
+          "growth": 1577131.1801202148,
+          "memory": 84910.37084569431,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 892928,
+        "mean_bytes": 540106.3105397831,
+        "time_share": [
+          1.0,
+          0.0,
+          0.0
+        ],
+        "total_ns": 17608341.707481477,
+        "regret_vs_oracle": 2.2681200000743256
+      },
+      {
+        "policy": "B always-segmented",
+        "cost": {
+          "exec": 5616906.027385401,
+          "growth": 391.091,
+          "memory": 42786.86786599207,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 449952,
+        "mean_bytes": 272162.95385931095,
+        "time_share": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "total_ns": 5660083.986251392,
+        "regret_vs_oracle": 0.050515374182520716
+      },
+      {
+        "policy": "C always-heap",
+        "cost": {
+          "exec": 29925510.19808437,
+          "growth": 0.0,
+          "memory": 7619.6249064422445,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 81192,
+        "mean_bytes": 48467.66602155487,
+        "time_share": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "total_ns": 29933129.822990812,
+        "regret_vs_oracle": 4.555608919025769
+      },
+      {
+        "policy": "D static-can-suspend",
+        "cost": {
+          "exec": 29925510.19808437,
+          "growth": 0.0,
+          "memory": 7619.6249064422445,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 81192,
+        "mean_bytes": 48467.66602155487,
+        "time_share": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "total_ns": 29933129.822990812,
+        "regret_vs_oracle": 4.555608919025769
+      },
+      {
+        "policy": "F hindsight-static",
+        "cost": {
+          "exec": 5339199.18536693,
+          "growth": 8113.661088064313,
+          "memory": 40598.76850437524,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 429463,
+        "mean_bytes": 258244.67436617205,
+        "time_share": [
+          0.004677532410095841,
+          0.9286741567608289,
+          0.0666483108290753
+        ],
+        "total_ns": 5387911.61495937,
+        "regret_vs_oracle": 0.0
+      },
+      {
+        "policy": "E oracle",
+        "cost": {
+          "exec": 5339199.18536693,
+          "growth": 8113.661088064313,
+          "memory": 40598.76850437524,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 429463,
+        "mean_bytes": 258244.67436617205,
+        "time_share": [
+          0.004677532410095841,
+          0.9286741567608289,
+          0.0666483108290753
+        ],
+        "total_ns": 5387911.61495937,
+        "regret_vs_oracle": 0.0
+      }
+    ],
+    "best_fixed": "B always-segmented",
+    "oracle_gain_over_best_fixed": 0.04808627786321571,
+    "heterogeneity_gain": 0.04808627786321571,
+    "switching_gain": 0.0,
+    "contexts_switching": 0.0
+  },
+  {
+    "trace": "adv-alternating",
+    "profile": "calibrated linux x86_64 / 13th Gen Intel(R) Core(TM) i5-13450HX",
+    "contexts": 257,
+    "steps": 119812,
+    "rows": [
+      {
+        "policy": "A always-contiguous",
+        "cost": {
+          "exec": 2860379.6245000167,
+          "growth": 418267.33808904886,
+          "memory": 5243305.146737654,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 2105344,
+        "mean_bytes": 2097072.4534928987,
+        "time_share": [
+          1.0,
+          0.0,
+          0.0
+        ],
+        "total_ns": 8521952.10932672,
+        "regret_vs_oracle": 0.1563293409516606
+      },
+      {
+        "policy": "B always-segmented",
+        "cost": {
+          "exec": 2589355.8983749915,
+          "growth": 12514.91200000001,
+          "memory": 5284266.324987991,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 2113536,
+        "mean_bytes": 2113454.9748544064,
+        "time_share": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "total_ns": 7886137.135362983,
+        "regret_vs_oracle": 0.07005667708559113
+      },
+      {
+        "policy": "C always-heap",
+        "cost": {
+          "exec": 2729381.0305312485,
+          "growth": 0.0,
+          "memory": 4640462.632242407,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 1856036,
+        "mean_bytes": 1855964.1457437454,
+        "time_share": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "total_ns": 7369843.662773656,
+        "regret_vs_oracle": 1.684609926141559e-6
+      },
+      {
+        "policy": "D static-can-suspend",
+        "cost": {
+          "exec": 2729381.0305312485,
+          "growth": 0.0,
+          "memory": 4640462.632242407,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 1856036,
+        "mean_bytes": 1855964.1457437454,
+        "time_share": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "total_ns": 7369843.662773656,
+        "regret_vs_oracle": 1.684609926141559e-6
+      },
+      {
+        "policy": "F hindsight-static",
+        "cost": {
+          "exec": 2729368.6103749988,
+          "growth": 0.0,
+          "memory": 4640462.637107783,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 1856036,
+        "mean_bytes": 1855964.1476896643,
+        "time_share": [
+          0.0,
+          2.004329655797126e-9,
+          0.9999999979956703
+        ],
+        "total_ns": 7369831.247482782,
+        "regret_vs_oracle": 0.0
+      },
+      {
+        "policy": "E oracle",
+        "cost": {
+          "exec": 2729368.6103749988,
+          "growth": 0.0,
+          "memory": 4640462.637107783,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 1856036,
+        "mean_bytes": 1855964.1476896643,
+        "time_share": [
+          0.0,
+          2.004329655797126e-9,
+          0.9999999979956703
+        ],
+        "total_ns": 7369831.247482782,
+        "regret_vs_oracle": 0.0
+      }
+    ],
+    "best_fixed": "C always-heap",
+    "oracle_gain_over_best_fixed": 1.6846070882357367e-6,
+    "heterogeneity_gain": 1.6846070882357367e-6,
+    "switching_gain": 0.0,
+    "contexts_switching": 0.0
+  },
+  {
+    "trace": "adv-hot-split",
+    "profile": "calibrated linux x86_64 / 13th Gen Intel(R) Core(TM) i5-13450HX",
+    "contexts": 1,
+    "steps": 200034,
+    "rows": [
+      {
+        "policy": "A always-contiguous",
+        "cost": {
+          "exec": 271123.22850050114,
+          "growth": 1045.7051485478878,
+          "memory": 2.355269631993846,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 8192,
+        "mean_bytes": 8192.0,
+        "time_share": [
+          1.0,
+          0.0,
+          0.0
+        ],
+        "total_ns": 272171.28891868104,
+        "regret_vs_oracle": 0.0
+      },
+      {
+        "policy": "B always-segmented",
+        "cost": {
+          "exec": 290065.2863748525,
+          "growth": 4888637.500006866,
+          "memory": 2.3220350880055762,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 8256,
+        "mean_bytes": 8076.405003678152,
+        "time_share": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "total_ns": 5178705.108416806,
+        "regret_vs_oracle": 18.027374742543444
+      },
+      {
+        "policy": "C always-heap",
+        "cost": {
+          "exec": 1960654.8180127398,
+          "growth": 0.0,
+          "memory": 1.3185386132527286,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 4598,
+        "mean_bytes": 4586.085674858308,
+        "time_share": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "total_ns": 1960656.136551353,
+        "regret_vs_oracle": 6.203758134595729
+      },
+      {
+        "policy": "D static-can-suspend",
+        "cost": {
+          "exec": 1960654.8180127398,
+          "growth": 0.0,
+          "memory": 1.3185386132527286,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 4598,
+        "mean_bytes": 4586.085674858308,
+        "time_share": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "total_ns": 1960656.136551353,
+        "regret_vs_oracle": 6.203758134595729
+      },
+      {
+        "policy": "F hindsight-static",
+        "cost": {
+          "exec": 271123.22850050114,
+          "growth": 1045.7051485478878,
+          "memory": 2.355269631993846,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 8192,
+        "mean_bytes": 8192.0,
+        "time_share": [
+          1.0,
+          0.0,
+          0.0
+        ],
+        "total_ns": 272171.28891868104,
+        "regret_vs_oracle": 0.0
+      },
+      {
+        "policy": "E oracle",
+        "cost": {
+          "exec": 271123.22850050114,
+          "growth": 1045.7051485478878,
+          "memory": 2.355269631993846,
+          "migration": 0.0
+        },
+        "migrations": 0,
+        "bytes_migrated": 0,
+        "peak_bytes": 8192,
+        "mean_bytes": 8192.0,
+        "time_share": [
+          1.0,
+          0.0,
+          0.0
+        ],
+        "total_ns": 272171.28891868104,
+        "regret_vs_oracle": 0.0
+      }
+    ],
+    "best_fixed": "A always-contiguous",
+    "oracle_gain_over_best_fixed": 0.0,
+    "heterogeneity_gain": 0.0,
+    "switching_gain": 0.0,
+    "contexts_switching": 0.0
+  }
+]

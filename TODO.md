@@ -19,12 +19,14 @@ Findings go in [DISCOVERIES.md](DISCOVERIES.md), not here.
 - [x] Exact per-context oracle, with property tests
 - [x] `morphstack sim | characterize | profile` and the first report ([results/stage2](results/stage2))
 - [x] Sensitivity sweep over memory price and migration-cost scale (`morphstack sweep`, [results/stage2/sweep.md](results/stage2/sweep.md))
-- [ ] **Calibrate the memory price**: this decides between the switching regime and the heterogeneity regime (see DISCOVERIES)
+- [x] `morphstack calibrate`: measured first touch, copy, mmap/munmap, and segment/frame malloc/free ([results/profiles](results/profiles))
+- [x] Memory price documented as an economic regime, not a measurement ([docs/simulator.md](docs/simulator.md))
+- [ ] **Measure `segmented.boundary_ns`**, the decisive parameter for the switching claim (threshold about 100–120 ns). Needs a minimal segment-switch microbenchmark in `morphstack-rt`, pulled forward from Stage 4.
 - [ ] Per-context timeline output (`sim --timeline`) for paper graph 5
-- [ ] Calibration microbenchmarks that measure each cost parameter on x86-64 (and on aarch64 macOS)
+- [ ] Calibrate on aarch64 macOS as a second machine
 - [ ] Real traces: a Tokio HTTP server under load, Go `runtime/trace`, and possibly Python asyncio, each with a converter
 - [ ] Go/no-go criterion 2: the oracle beats the best fixed policy by more than 10% on at least one **real** trace
-- [ ] `docs/simulator.md` covering model assumptions, decision granularity, and the separability condition for oracle exactness
+- [x] `docs/simulator.md` covering model assumptions, decision granularity, the separability condition for oracle exactness, and memory regimes
 - [ ] A finer static baseline D. It currently equals always-heap on every workload.
 - [ ] Shared memory-pressure term (non-linear) and an oracle lower bound under coupling
 

@@ -64,6 +64,15 @@ enum Command {
         #[arg(long)]
         out: Option<PathBuf>,
     },
+    /// Measure cost-model parameters on this machine and write a profile.
+    Calibrate {
+        /// Write `<name>.toml` (profile) and `<name>.json` (measurements) here.
+        #[arg(long, default_value = "results/profiles")]
+        out: PathBuf,
+        /// Profile file stem.
+        #[arg(long, default_value = "local")]
+        name: String,
+    },
     /// Print the built-in cost profile as TOML.
     Profile,
     /// Generate a synthetic workload trace.
@@ -142,6 +151,29 @@ fn run(cli: Cli) -> Result<ExitCode> {
             out,
         } => characterize(scale, seed, profile.as_deref(), out.as_deref()),
         Command::Sweep { scale, seed, out } => sweep(scale, seed, out.as_deref()),
+        Command::Calibrate { out, name } => {
+            let c = morphstack_bench::calibrate(&CostModel::default())?;
+            println!("{}", c.machine);
+            for m in &c.measurements {
+                println!(
+                    "  {:<32}{:>12.4} {:<8} [{:.4} .. {:.4}]  {}",
+                    m.parameter, m.value, m.unit, m.min, m.max, m.method
+                );
+            }
+            println!("not measured:");
+            for (p, why) in &c.not_measured {
+                println!("  {p:<64} {why}");
+            }
+            std::fs::create_dir_all(&out)?;
+            let toml_path = out.join(format!("{name}.toml"));
+            std::fs::write(&toml_path, c.profile.to_toml())?;
+            std::fs::write(
+                out.join(format!("{name}.json")),
+                serde_json::to_string_pretty(&c)?,
+            )?;
+            println!("wrote {}", toml_path.display());
+            Ok(ExitCode::SUCCESS)
+        }
         Command::Profile => {
             print!("{}", CostModel::default().to_toml());
             Ok(ExitCode::SUCCESS)
