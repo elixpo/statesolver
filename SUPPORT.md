@@ -1,15 +1,15 @@
 # Support
 
-MorphStack is active, pre-release open-source software. It does not currently carry
+StateSolver is active, pre-release open-source software. It does not currently carry
 an uptime, compatibility, response-time, or long-term-support guarantee.
 
-- Use [GitHub Issues](https://github.com/elixpo/morphstack/issues) for
+- Use [GitHub Issues](https://github.com/elixpo/statesolver/issues) for
   reproducible bugs and scoped feature proposals.
 - Use [Elixpo Discussions](https://github.com/orgs/elixpo/discussions) for
   usage questions, design discussion, and community help.
 - Use the private path in [SECURITY.md](SECURITY.md) for vulnerabilities.
 
-Include the MorphStack version or commit, operating system, relevant configuration,
+Include the StateSolver version or commit, operating system, relevant configuration,
 minimal reproduction, expected behavior, and observed behavior. Remove tokens,
 private prompts, personal data, and sensitive agent traces before posting.
 

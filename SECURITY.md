@@ -2,7 +2,7 @@
 
 ## Private reporting
 
-Please use [GitHub private vulnerability reporting](https://github.com/elixpo/morphstack/security/advisories/new)
+Please use [GitHub private vulnerability reporting](https://github.com/elixpo/statesolver/security/advisories/new)
 for vulnerabilities. If that route is unavailable, email `hello@elixpo.com`
 with the repository name, affected version or commit, impact, reproduction
 steps, and any suggested mitigation.
@@ -10,18 +10,19 @@ steps, and any suggested mitigation.
 Do not disclose an unresolved vulnerability in a public issue or discussion.
 We will acknowledge a usable report, investigate it, coordinate a fix, and
 publish an advisory when disclosure is appropriate. No response-time guarantee
-is made while MorphStack is pre-release.
+is made while StateSolver is pre-release.
 
 ## High-priority boundaries
 
-Reports are especially useful when they concern:
+StateSolver runs and controls other programs, so reports are especially useful when they concern:
 
-- memory-safety violations in the coroutine runtime (`morphstack-rt`), such as
-  use-after-free, dangling references after frame migration, or stack overflow
-  that escapes a guard page;
-- crashes or unbounded resource use when parsing untrusted trace files;
-- secrets or agent-trace exposure in the optional `morphstack-agent` features; or
+- the recorder or replayer affecting processes, files, or the network beyond the explicitly traced target (for example, replay re-executing side-effecting syscalls instead of injecting recorded results);
+- crashes, code execution, or unbounded resource use when parsing untrusted `.ss` traces or ELF/DWARF files;
+- memory-safety violations in `statesolver-record` or `statesolver-replay`;
+- secrets from traced programs (memory, syscall payloads) leaking through traces, the harness, or agent output; and
 - dependency, release, workflow, or artifact supply-chain compromise.
+
+Traces contain the traced program's memory and inputs. Treat them as sensitive.
 
 Agent prompt behavior without a demonstrated security boundary failure may be handled
 as a normal bug. Never include real secrets or third-party personal data in a

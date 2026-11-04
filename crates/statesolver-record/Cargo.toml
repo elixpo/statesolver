@@ -1,0 +1,12 @@
+[package]
+name = "statesolver-record"
+description = "StateSolver recorder: ptrace process control, syscall and allocation capture"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[lints]
+workspace = true

@@ -1,6 +1,6 @@
 # Code of Conduct
 
-MorphStack follows the Elixpo community standard: participation must be respectful,
+StateSolver follows the Elixpo community standard: participation must be respectful,
 constructive, and safe for contributors with different backgrounds and levels
 of experience.
 
@@ -26,4 +26,4 @@ without retaliation against good-faith reporters. Project maintainers may
 escalate organization-wide concerns to the Elixpo leads.
 
 This policy applies in repository spaces, Elixpo discussions, project events,
-and public interactions where a person is representing MorphStack or Elixpo.
+and public interactions where a person is representing StateSolver or Elixpo.

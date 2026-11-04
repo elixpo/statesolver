@@ -13,5 +13,5 @@ body:
   - type: textarea
     id: impact
     attributes:
-      label: How it affects MorphStack
-      description: Novelty claim, cost model, policy, or evaluation.
+      label: How it affects StateSolver
+      description: Novelty claim, replay design, causal reconstruction, or evaluation.

@@ -1,9 +1,9 @@
 cff-version: 1.2.0
-message: "If you use MorphStack, please cite it as below."
-title: "MorphStack: Online Adaptive Representation of Activation State"
+message: "If you use StateSolver, please cite it as below."
+title: "StateSolver: Allocation-Epoch-Aware Causal Reconstruction over Deterministic Replay"
 authors:
   - family-names: "Elixpo contributors"
-repository-code: "https://github.com/elixpo/morphstack"
-url: "https://morphstack.elixpo.com"
+repository-code: "https://github.com/elixpo/statesolver"
+url: "https://statesolver.elixpo.com"
 license: MIT
 type: software

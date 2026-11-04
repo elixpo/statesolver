@@ -1,5 +1,5 @@
 name: Bug report
-description: Report a reproducible problem in MorphStack.
+description: Report a reproducible problem in StateSolver.
 title: "bug: "
 labels: [bug]
 body:
@@ -20,8 +20,8 @@ body:
   - type: input
     id: version
     attributes:
-      label: morphstack version
-      placeholder: morphstack --version
+      label: statesolver version
+      placeholder: statesolver --version
   - type: textarea
     id: reproduction
     attributes:
