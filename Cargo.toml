@@ -1,0 +1,43 @@
+[workspace]
+members = [
+    "crates/morphstack-agent",
+    "crates/morphstack-bench",
+    "crates/morphstack-cli",
+    "crates/morphstack-cost",
+    "crates/morphstack-policy",
+    "crates/morphstack-rt",
+    "crates/morphstack-sim",
+    "crates/morphstack-trace",
+    "crates/morphstack-workloads",
+]
+resolver = "3"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.95"
+license = "MIT"
+repository = "https://github.com/elixpo/morphstack"
+homepage = "https://morphstack.elixpo.com"
+
+# `morphstack-rt` (Stage 4) is the only crate that will opt out of these lints,
+# replacing `forbid` with `deny` and documenting every `unsafe` block.
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+
+[workspace.dependencies]
+anyhow = "1.0"
+clap = { version = "4.5", features = ["derive"] }
+proptest = "1.5"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "2.0"
+morphstack-trace = { path = "crates/morphstack-trace" }
+
+[profile.release]
+lto = "thin"
+codegen-units = 1

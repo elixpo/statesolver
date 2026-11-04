@@ -1,0 +1,17 @@
+name: Research question or related work
+description: Propose a related paper, a hypothesis, or an experiment.
+title: "research: "
+labels: [research]
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: Question or related work
+      description: For papers, include the title, venue, year, and a link or DOI.
+    validations:
+      required: true
+  - type: textarea
+    id: impact
+    attributes:
+      label: How it affects MorphStack
+      description: Novelty claim, cost model, policy, or evaluation.

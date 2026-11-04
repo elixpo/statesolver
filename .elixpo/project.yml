@@ -1,0 +1,31 @@
+schema_version: '1.0'
+project:
+  id: morphstack
+  name: morphstack
+  title: MorphStack
+  description: Online adaptive representation of activation state, comparing stack, stacklet, and heap frames against a hindsight oracle.
+  family: research
+  artifact_type: cli
+  profile: research
+  technologies:
+  - Rust
+  lifecycle: active
+  relationship: core
+  custody: elixpo-owned
+  stack: rust
+  repository: https://github.com/elixpo/morphstack
+  deployment: https://morphstack.elixpo.com
+  discussions: https://github.com/orgs/elixpo/discussions
+  status_owner: elixpo
+publication:
+  public: true
+  featured: false
+  canonical_slug: morphstack
+  canonical_url: https://elixpo.com/projects/morphstack
+license:
+  current_file: LICENSE
+  target_code_license: MIT
+  trademark_policy: https://elixpo.com/terms
+ci:
+  lint_cmd: cargo clippy --workspace --all-targets -- -D warnings
+  test_cmd: cargo test --workspace --all-targets

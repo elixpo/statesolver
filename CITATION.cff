@@ -1,0 +1,9 @@
+cff-version: 1.2.0
+message: "If you use MorphStack, please cite it as below."
+title: "MorphStack: Online Adaptive Representation of Activation State"
+authors:
+  - family-names: "Elixpo contributors"
+repository-code: "https://github.com/elixpo/morphstack"
+url: "https://morphstack.elixpo.com"
+license: MIT
+type: software
