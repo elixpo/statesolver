@@ -244,7 +244,11 @@ fn causal_primitives_find_the_stale_writes_in_001() {
     let def = reg_producer(&mut s, base, w2.pos, 64)
         .unwrap()
         .expect("producer");
-    assert!(def.insn.text.contains(",[rbp"), "a stack load: {}", def.insn.text);
+    assert!(
+        def.insn.text.contains(",[rbp"),
+        "a stack load: {}",
+        def.insn.text
+    );
     assert_eq!(
         def.value, slot,
         "the stale pointer equals the reused address"
@@ -252,4 +256,59 @@ fn causal_primitives_find_the_stale_writes_in_001() {
     let _ = Reg::Rax;
     drop(s);
     let _ = std::fs::remove_dir_all(trace);
+}
+
+#[test]
+fn stale_pointer_provenance_ends_at_the_freed_epoch() {
+    use statesolver_replay::provenance::{Carrier, Origin, trace};
+    use statesolver_replay::queries::last_writer;
+    let Some(rr) = rr_record("001-uaf-reuse", None) else {
+        return;
+    };
+    let mut s = statesolver_replay::Session::start(Some(&rr)).expect("rr replay");
+    let (_, index, _) = statesolver_replay::index::build(&mut s).expect("index");
+    drop(s);
+    let users: Vec<(u64, u32)> = index
+        .iter()
+        .filter_map(|e| match e.kind {
+            EventKind::Alloc {
+                addr,
+                size: 32,
+                epoch,
+                ..
+            } => Some((addr, epoch.0)),
+            _ => None,
+        })
+        .collect();
+    let slot = users[1].0;
+    let crash = index.last().and_then(|e| e.rr).expect("crash");
+
+    let mut s = statesolver_replay::Session::start(Some(&rr)).expect("rr replay");
+    let w1 = last_writer(&mut s, slot, 8, crash).unwrap().unwrap();
+    let w2 = last_writer(&mut s, slot, 8, w1.pos).unwrap().unwrap(); // name[0] = 'A'
+    let base = statesolver_trace::Reg::from_name(&w2.insn.address_regs[0]).unwrap();
+    let chain = trace(&mut s, &index, Carrier::Reg { reg: base }, w2.pos, 16, 4096).unwrap();
+    for h in &chain.hops {
+        eprintln!(
+            "  {:#x}  {:<32} {:?} <- {:?}",
+            h.pos.pc, h.insn.text, h.into, h.from
+        );
+    }
+    eprintln!("  origin: {:?}", chain.origin);
+    match chain.origin {
+        Origin::Allocation { epoch, addr, .. } => {
+            assert_eq!(addr, slot, "same address...");
+            assert_eq!(
+                epoch.0, 1,
+                "...but the pointer was produced by epoch 1 (the freed User)"
+            );
+            assert_eq!(
+                users[1].1, 2,
+                "while the address now belongs to epoch 2 (the Handler)"
+            );
+        }
+        other => panic!("expected an allocation origin, got {other:?}"),
+    }
+    drop(s);
+    let _ = std::fs::remove_dir_all(rr);
 }

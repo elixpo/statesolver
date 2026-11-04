@@ -6,6 +6,15 @@ MorphStack's log is archived at [docs/archive/morphstack/DISCOVERIES.md](docs/ar
 
 ---
 
+## 2026-11-04: First end-to-end lifetime-aware provenance chain on a real replay
+
+- **Finding:** from the stale `name[0] = 'A'` store in bug 001, `provenance::trace` follows the pointer back through 6 hops of real x86-64 code: `mov rax,[rbp-20h]` (load `s.cached_user`) ← `mov [rbp-20h],rax` (`s.cached_user = u`) ← `mov rax,[rbp-18h]` ← `mov [rbp-18h],rax` (`u = load_user()`) ← `mov rax,[rbp-8]` (`return u`) ← `mov [rbp-8],rax` (`u = malloc()`). It ends at **allocation #0, epoch 1**. The address being written belongs to **#1, epoch 2** at that time. This is the mechanism the paper's arm A4 exposes and A5 (address-only) cannot.
+- **Bugs found on the way:**
+  1. iced's `virtual_address` takes the *memory operand's* index, not 0.
+  2. Its register callback is also asked for the segment base (DS), which must be 0 in 64-bit mode; returning `None` voids the address.
+
+  Both are fixed and covered by the test.
+
 ## 2026-11-04: Reverse watchpoints stop on the writer before it executes; bug 001 has two stale writes
 
 - **Finding:** in rr 5.9, reverse-continue with a write watchpoint stops **on** the writing instruction, before it executes. The location still holds the old value, the writer's address and source registers are readable, and one forward step shows the new value. Reverse-continuing from a crash first re-reports the pending signal at the same position, and the engine skips it.

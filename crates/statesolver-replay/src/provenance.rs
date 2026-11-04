@@ -1,0 +1,321 @@
+//! Provenance chains: where did a value come from?
+//!
+//! Starting from a register or memory location at a position, follow
+//! producers backward: a register to the instruction that wrote it, a load to
+//! the memory it read, a memory location to its last writer and that writer's
+//! source register. The chain stops at an allocation return (the value *is* a
+//! fresh heap pointer), syscall input, a constant, or a step budget.
+//!
+//! With allocation identity, the end of a pointer's chain says which
+//! **allocation epoch** produced it. Comparing that with the allocation that
+//! owns the address when the pointer is used is the epoch check that
+//! address-only tracing cannot make.
+
+use iced_x86::{Decoder, DecoderOptions, Instruction, Register};
+use serde::Serialize;
+use statesolver_trace::{AllocId, Epoch, Event, EventKind, Reg, RrPos};
+
+use crate::Result;
+use crate::queries::{self, Insn};
+use crate::session::{Session, Stop};
+
+/// Where a value currently lives.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(tag = "kind", rename_all = "snake_case")]
+pub enum Carrier {
+    /// A register.
+    Reg {
+        /// Register name.
+        reg: Reg,
+    },
+    /// A memory location.
+    Mem {
+        /// Address.
+        addr: u64,
+        /// Width in bytes (1, 2, 4, or 8).
+        len: u8,
+    },
+}
+
+/// One step of a chain: the value was produced here.
+#[derive(Debug, Clone, Serialize)]
+pub struct Hop {
+    /// Position of the producing instruction (before it executes).
+    pub pos: RrPos,
+    /// The instruction.
+    pub insn: Insn,
+    /// What carried the value into this instruction's output.
+    pub into: Carrier,
+    /// What the instruction took the value from (the next link).
+    pub from: Option<Carrier>,
+}
+
+/// Where a chain ended.
+#[derive(Debug, Clone, Serialize)]
+#[serde(tag = "kind", rename_all = "snake_case")]
+pub enum Origin {
+    /// The value is a pointer returned by this allocation.
+    Allocation {
+        /// Allocation id.
+        alloc: AllocId,
+        /// Its epoch.
+        epoch: Epoch,
+        /// Its start address.
+        addr: u64,
+        /// Position of the allocation return.
+        pos: RrPos,
+    },
+    /// The value came from a syscall result (external input).
+    Syscall {
+        /// Position of the syscall instruction.
+        pos: RrPos,
+    },
+    /// The value is an immediate or address computed from the stack or code.
+    Constant {
+        /// Position of the instruction.
+        pos: RrPos,
+    },
+    /// The chain could not be followed further.
+    Unknown {
+        /// Why.
+        reason: String,
+    },
+}
+
+/// A provenance chain.
+#[derive(Debug, Clone, Serialize)]
+pub struct Chain {
+    /// Hops from the query backward.
+    pub hops: Vec<Hop>,
+    /// Where it ended.
+    pub origin: Origin,
+}
+
+fn to_reg(r: Register) -> Option<Reg> {
+    Reg::from_name(&format!("{:?}", r.full_register()).to_lowercase())
+}
+
+fn decode(s: &mut Session, pc: u64) -> Result<Instruction> {
+    let bytes = s.mem(pc, 15).or_else(|_| s.mem(pc, 8))?;
+    Ok(Decoder::with_ip(64, &bytes, pc, DecoderOptions::NONE).decode())
+}
+
+/// Address of the instruction's memory operand at the current position.
+fn mem_operand(s: &mut Session, ins: &Instruction) -> Result<Option<(u64, u8)>> {
+    let Some(op) = (0..ins.op_count()).find(|&i| ins.op_kind(i) == iced_x86::OpKind::Memory) else {
+        return Ok(None);
+    };
+    let mut vals = std::collections::HashMap::new();
+    for r in [ins.memory_base(), ins.memory_index()] {
+        if let Some(reg) = to_reg(r) {
+            vals.insert(r, s.reg(reg)?);
+        }
+    }
+    let addr = ins.virtual_address(op, 0, |r, _, _| match r {
+        Register::RIP => Some(ins.next_ip()),
+        // In 64-bit mode the DS/ES/SS/CS bases are zero (FS/GS are not
+        // supported yet and make the address unknown).
+        Register::None | Register::DS | Register::ES | Register::SS | Register::CS => Some(0),
+        _ => vals.get(&r).copied(),
+    });
+    let len = u8::try_from(ins.memory_size().size().clamp(1, 8)).unwrap_or(8);
+    Ok(addr.map(|a| (a, len)))
+}
+
+/// Index events that are allocations, for matching allocation returns.
+fn allocations(index: &[Event]) -> Vec<(RrPos, AllocId, Epoch, u64)> {
+    index
+        .iter()
+        .filter_map(|e| match (&e.kind, e.rr) {
+            (
+                EventKind::Alloc {
+                    alloc, addr, epoch, ..
+                },
+                Some(pos),
+            ) => Some((pos, *alloc, *epoch, *addr)),
+            _ => None,
+        })
+        .collect()
+}
+
+/// Follow `start` back from `at` for at most `max_hops` hops; each register
+/// search looks back at most `max_steps` instructions.
+///
+/// # Errors
+/// Fails on replay errors.
+#[allow(clippy::too_many_lines)]
+pub fn trace(
+    s: &mut Session,
+    index: &[Event],
+    start: Carrier,
+    at: RrPos,
+    max_hops: usize,
+    max_steps: u32,
+) -> Result<Chain> {
+    let allocs = allocations(index);
+    let mut hops = Vec::new();
+    let mut carrier = start;
+    let mut pos = at;
+    for _ in 0..max_hops {
+        match carrier {
+            Carrier::Reg { reg } => {
+                // An allocation return delivering this register's value?
+                s.goto(pos)?;
+                let value = s.reg(reg)?;
+                if reg == Reg::Rax
+                    && let Some(&(p, alloc, epoch, addr)) =
+                        allocs.iter().find(|a| a.0 == pos && a.3 == value)
+                {
+                    return Ok(Chain {
+                        hops,
+                        origin: Origin::Allocation {
+                            alloc,
+                            epoch,
+                            addr,
+                            pos: p,
+                        },
+                    });
+                }
+                let Some(def) = producer_or_alloc(s, reg, pos, max_steps, &allocs)? else {
+                    return Ok(Chain {
+                        hops,
+                        origin: Origin::Unknown {
+                            reason: format!(
+                                "no writer of {} within {max_steps} instructions",
+                                reg.name()
+                            ),
+                        },
+                    });
+                };
+                let (dpos, insn) = match def {
+                    Ok(found) => found,
+                    Err(origin) => return Ok(Chain { hops, origin }),
+                };
+                s.goto(dpos)?;
+                let ins = decode(s, dpos.pc)?;
+                if insn.text.starts_with("syscall") {
+                    hops.push(Hop {
+                        pos: dpos,
+                        insn,
+                        into: carrier,
+                        from: None,
+                    });
+                    return Ok(Chain {
+                        hops,
+                        origin: Origin::Syscall { pos: dpos },
+                    });
+                }
+                let is_lea = insn.text.starts_with("lea");
+                let from = if is_lea {
+                    None
+                } else if let Some((addr, len)) = mem_operand(s, &ins)? {
+                    Some(Carrier::Mem { addr, len })
+                } else {
+                    insn.reads
+                        .iter()
+                        .filter(|r| *r != reg.name() && !r.starts_with("rflags") && *r != "rsp")
+                        .find_map(|r| Reg::from_name(r))
+                        .map(|reg| Carrier::Reg { reg })
+                };
+                hops.push(Hop {
+                    pos: dpos,
+                    insn,
+                    into: carrier,
+                    from,
+                });
+                match from {
+                    Some(c) => {
+                        carrier = c;
+                        pos = dpos;
+                    }
+                    None => {
+                        return Ok(Chain {
+                            hops,
+                            origin: Origin::Constant { pos: dpos },
+                        });
+                    }
+                }
+            }
+            Carrier::Mem { addr, len } => {
+                let aligned = addr & !u64::from(len.max(1) - 1);
+                let Some(w) = queries::last_writer(s, aligned, len, pos)? else {
+                    return Ok(Chain {
+                        hops,
+                        origin: Origin::Unknown {
+                            reason: format!("{addr:#x} was not written during the recording"),
+                        },
+                    });
+                };
+                s.goto(w.pos)?;
+                let ins = decode(s, w.pos.pc)?;
+                // The stored value's source: the register operand of the store.
+                let src = (0..ins.op_count())
+                    .filter(|&i| ins.op_kind(i) == iced_x86::OpKind::Register)
+                    .find_map(|i| to_reg(ins.op_register(i)))
+                    .map(|reg| Carrier::Reg { reg });
+                hops.push(Hop {
+                    pos: w.pos,
+                    insn: w.insn.clone(),
+                    into: carrier,
+                    from: src,
+                });
+                match src {
+                    Some(c) => {
+                        carrier = c;
+                        pos = w.pos;
+                    }
+                    None => {
+                        return Ok(Chain {
+                            hops,
+                            origin: Origin::Constant { pos: w.pos },
+                        });
+                    }
+                }
+            }
+        }
+    }
+    Ok(Chain {
+        hops,
+        origin: Origin::Unknown {
+            reason: format!("stopped after {max_hops} hops"),
+        },
+    })
+}
+
+/// Search backward for the writer of `reg`, stopping early if the search
+/// crosses an indexed allocation return that delivered the value in `rax`.
+#[allow(clippy::type_complexity)]
+fn producer_or_alloc(
+    s: &mut Session,
+    reg: Reg,
+    at: RrPos,
+    max_steps: u32,
+    allocs: &[(RrPos, AllocId, Epoch, u64)],
+) -> Result<Option<std::result::Result<(RrPos, Insn), Origin>>> {
+    s.goto(at)?;
+    let target = s.reg(reg)?;
+    let want = reg.name();
+    for _ in 0..max_steps {
+        let here = s.position()?;
+        if reg == Reg::Rax
+            && let Some(&(p, alloc, epoch, addr)) =
+                allocs.iter().find(|a| a.0 == here && a.3 == target)
+        {
+            return Ok(Some(Err(Origin::Allocation {
+                alloc,
+                epoch,
+                addr,
+                pos: p,
+            })));
+        }
+        if matches!(s.reverse_step()?, Stop::Begin) {
+            return Ok(None);
+        }
+        let pos = s.position()?;
+        let insn = queries::decode_at(s, pos.pc)?;
+        if insn.writes.iter().any(|w| w == want) {
+            return Ok(Some(Ok((pos, insn))));
+        }
+    }
+    Ok(None)
+}

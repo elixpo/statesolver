@@ -34,7 +34,9 @@ Findings go in [DISCOVERIES.md](DISCOVERIES.md).
 ## Stage 3: Causal query engine (#3)
 
 - [x] Causal primitives (`statesolver-replay::queries`): `last_writer` (watchpoint plus reverse-continue, stopping on the writer before it executes) and `reg_producer` (reverse-step until the register is written), with `iced-x86` decoding of read, write, and address registers
-- [ ] Provenance chain: alternate register producers and memory last-writers back to an allocation return, syscall input, or constant
+- [x] Provenance chain (`statesolver-replay::provenance`): alternates register producers and memory last-writers back to an allocation return, syscall input, or constant. On bug 001 the stale pointer resolves to **allocation #0 epoch 1** while the address belongs to **#1 epoch 2** (6 hops, tested)
+- [ ] Epoch check as an explicit inference (pointer origin epoch against owner epoch at use), and the `origin` and `why` CLI commands
+- [ ] Provenance through `memcpy`-style SIMD copies and `rep movs` (multi-byte sources)
 - [ ] Temporal object graph; address-only switch (arm A5)
 - [ ] `why`, `origin`, `history`, `lifetime`, `explain-crash`; evidence IDs stored with replay positions
 - [ ] Ground-truth assertions from `ROOT_CAUSE.md`; grow the corpus with real reuse bugs
