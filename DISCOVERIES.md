@@ -6,6 +6,16 @@ MorphStack's log is archived at [docs/archive/morphstack/DISCOVERIES.md](docs/ar
 
 ---
 
+## 2026-11-04: Breakpoint-based allocation tracking costs about 50 µs per allocation, far behind rr
+
+- **Finding:** `benchmarks/alloc-churn.c` with 100k malloc/free pairs runs natively in under 0.01 s, takes **4.98 s** under `statesolver record`, and takes **0.04 s** under `rr record`. Compute-bound code (`benchmarks/compute.c`) records at native speed (0.09 s either way), so the cost is the 4–5 ptrace stops per allocator call, not syscalls.
+- **Implication:** our own ptrace recorder cannot be the product backend. Either use an in-process allocation log (an `LD_PRELOAD` shim writing to a shared ring buffer, drained at syscall stops, as rr's syscallbuf does) or, better, **use rr as the recording and replay substrate** and derive allocation epochs on demand during replay. The second option also fits the "reconstruct only what the query needs" principle.
+
+## 2026-11-04: WATCHER (OOPSLA 2020) takes the "on-demand replay slicing" novelty
+
+- **Finding:** the forward-citation check ([docs/slr/forward-citations.md](docs/slr/forward-citations.md)) found WATCHER: crash-triggered backward slicing of native binaries over replayed re-executions, back to syscall input, with no eager dependence graph. It keys dependences by raw address and claims that handles reuse. None of its bugs involves reuse.
+- **Implication:** the purely technical claim narrows to "lifetime-aware dependences inside replay-driven slicing, plus evidence that WATCHER-style tracking breaks under reuse". That is an incremental claim. It prompted a direction re-scrutiny: rich project first, with the paper asking whether evidence-grounded causal queries make LLM debugging agents more accurate (under review).
+
 ## 2026-11-04: Literature review gives a narrowed GO. Epoch identity is prior art; lifetime-aware on-demand slicing is the claim
 
 - **Finding:** 67 queries, 68 works ([docs/slr/](docs/slr/verdict.md)). No work combines all five: unmodified native binaries, deterministic replay, per-query dependence reconstruction, allocation-lifetime identity across reuse, and backward slices that reach syscall input.

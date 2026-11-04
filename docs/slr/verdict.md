@@ -2,6 +2,14 @@
 
 **Date:** 2026-11-04 | **Inputs:** `protocol.md` (67 queries), `matrix.md` (68 works)
 
+## Update 2026-11-04: forward-citation check (see [forward-citations.md](forward-citations.md))
+
+**WATCHER (Liu et al., OOPSLA 2020, doi:10.1145/3428211)** already does crash-triggered, replay-based backward slicing of unmodified native binaries back to syscall input, without an eager dependence graph. The clause "first to reconstruct only the queried dependences through checkpointed replay" is **withdrawn**. WATCHER keys dependences by raw address ("last write per address"), and its §3.4 claims this handles heap reuse. None of its 24 bugs is a use-after-free or reuse bug. It is the natural **address-only baseline**.
+
+Also cite: Ravel (AsiaCCS 2017: replay plus alloc/free lifetimes, address-based dependence), UAFSan (ISSTA 2021), BSan (ICSE-C 2025).
+
+**The remaining technical claim:** lifetime-qualified dependence inside replay-driven on-demand slicing, plus evidence that WATCHER-style last-write tracking breaks under reuse. Project direction is being re-scrutinized in [agent-paper-scrutiny.md](agent-paper-scrutiny.md).
+
 ## Verdict: GO (narrowed, provisional)
 
 No located work combines all five parts of the claim. Those parts are: unmodified native binaries; deterministic replay; dependences reconstructed per query rather than stored eagerly; allocation-lifetime identity across address reuse; and a backward causal slice that reaches syscall input.

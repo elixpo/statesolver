@@ -123,3 +123,12 @@
 | On-demand provenance over deterministic replay of native binaries | Arnold, JetStream, (VulnScan, REVEN taint, partial) | **none** (all address/byte-keyed) |
 | Demand-driven slice construction | Zhang–Gupta LP, Postolski et al. | **none** (source/Java, eager trace or managed heap) |
 | Syscall input as slice source | Arnold, JetStream, PANDA, Redux, Pernosco | **none** with lifetime identity |
+
+## Added from the forward-citation check (2026-11-04)
+
+| Work | Year/Venue | Native binaries | Deterministic replay | On-demand deps (no eager DDG) | Allocation-epoch identity | Crosses free/reuse | Syscall input as source | Causal explanation output | Evaluated on UAF w/ reuse | Link | Notes |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| WATCHER (Liu et al.) | 2020 / OOPSLA | ✓ | ✓ (re-execution) | ✓ | ✗ | ✗ (raw-address last write; claims reuse is handled) | ✓ | ✓ | ✗ (24 bugs, none UAF/reuse) | https://doi.org/10.1145/3428211 | **Closest work**; address-only baseline |
+| Ravel ("Pinpointing Vulnerabilities") | 2017 / AsiaCCS | ✓ | ✓ | ✗ (full replay log) | partial (lifetimes label the bug type only) | partial | partial | partial | partial | see forward-citations.md | Dependences are address-based |
+| UAFSan | 2021 / ISSTA | ✗ (source) | ✗ | ✗ | ✓ (per-allocation IDs) | ✓ | ✗ | ✗ (detector) | ✓ | see forward-citations.md | Detector, not a slicer |
+| BSan | 2025 / ICSE-C | ✓ | ✗ | ✗ | ✓ | ✓ | ✗ | ✗ (detector) | ✓ | see forward-citations.md | Binary-level detector |
