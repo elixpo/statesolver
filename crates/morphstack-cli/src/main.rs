@@ -5,7 +5,10 @@ use std::process::ExitCode;
 
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand, ValueEnum};
+use morphstack_cost::{CostModel, Rep};
+use morphstack_sim::{Baseline, Outcome, Workload, oracle, price};
 use morphstack_trace::{Format, StatsCollector, TraceWriter, Validator};
+use serde::Serialize;
 
 #[derive(Parser)]
 #[command(
@@ -23,6 +26,34 @@ enum Command {
     /// Inspect, check, and convert activation-event traces.
     #[command(subcommand)]
     Trace(TraceCmd),
+    /// Price every baseline and the hindsight oracle on a trace.
+    Sim {
+        /// Trace file.
+        path: PathBuf,
+        /// Cost profile (TOML). Defaults to the built-in uncalibrated profile.
+        #[arg(long)]
+        profile: Option<PathBuf>,
+        /// Emit JSON.
+        #[arg(long)]
+        json: bool,
+    },
+    /// Generate every workload, simulate it, and write the characterization report.
+    Characterize {
+        /// Size multiplier.
+        #[arg(long, default_value_t = 1.0)]
+        scale: f64,
+        /// Seed.
+        #[arg(long, default_value_t = 1)]
+        seed: u64,
+        /// Cost profile (TOML).
+        #[arg(long)]
+        profile: Option<PathBuf>,
+        /// Write `report.md` and `report.json` here.
+        #[arg(long)]
+        out: Option<PathBuf>,
+    },
+    /// Print the built-in cost profile as TOML.
+    Profile,
     /// Generate a synthetic workload trace.
     Gen {
         /// Workload name, or `list` to show all.
@@ -87,6 +118,21 @@ fn main() -> ExitCode {
 
 fn run(cli: Cli) -> Result<ExitCode> {
     match cli.command {
+        Command::Sim {
+            path,
+            profile,
+            json,
+        } => sim(&path, profile.as_deref(), json),
+        Command::Characterize {
+            scale,
+            seed,
+            profile,
+            out,
+        } => characterize(scale, seed, profile.as_deref(), out.as_deref()),
+        Command::Profile => {
+            print!("{}", CostModel::default().to_toml());
+            Ok(ExitCode::SUCCESS)
+        }
         Command::Gen {
             workload,
             out,
@@ -230,5 +276,231 @@ fn gen_trace(name: &str, out: Option<&Path>, seed: u64, scale: f64) -> Result<Ex
     })?;
     writer.finish()?;
     println!("wrote {n} events to {}", out.display());
+    Ok(ExitCode::SUCCESS)
+}
+
+fn load_profile(path: Option<&Path>) -> Result<CostModel> {
+    match path {
+        None => Ok(CostModel::default()),
+        Some(p) => {
+            let text = std::fs::read_to_string(p)
+                .with_context(|| format!("reading profile {}", p.display()))?;
+            CostModel::from_toml(&text).with_context(|| format!("parsing profile {}", p.display()))
+        }
+    }
+}
+
+#[derive(Serialize)]
+struct PolicyRow {
+    policy: String,
+    #[serde(flatten)]
+    outcome: Outcome,
+    total_ns: f64,
+    regret_vs_oracle: f64,
+}
+
+#[derive(Serialize)]
+struct SimReport {
+    trace: String,
+    profile: String,
+    contexts: usize,
+    steps: usize,
+    rows: Vec<PolicyRow>,
+    best_fixed: String,
+    oracle_gain_over_best_fixed: f64,
+    /// Share of the oracle's gain explained by per-context static choice.
+    heterogeneity_gain: f64,
+    /// Share of the oracle's gain that needs switching over time.
+    switching_gain: f64,
+    /// Oracle schedule share of contexts that migrate at least once.
+    contexts_switching: f64,
+}
+
+fn simulate(name: &str, model: &CostModel, w: &Workload) -> SimReport {
+    let oracle_schedule = oracle::solve(model, w);
+    let oracle_out = price(model, w, &oracle_schedule);
+    let best = oracle_out.cost.total();
+    let mut rows: Vec<PolicyRow> = Baseline::ALL
+        .iter()
+        .map(|b| {
+            let outcome = price(model, w, &b.schedule(w));
+            let total = outcome.cost.total();
+            PolicyRow {
+                policy: b.name().to_owned(),
+                outcome,
+                total_ns: total,
+                regret_vs_oracle: (total - best) / best,
+            }
+        })
+        .collect();
+    let best_fixed = rows
+        .iter()
+        .take(3)
+        .min_by(|a, b| a.total_ns.total_cmp(&b.total_ns))
+        .map(|r| (r.policy.clone(), r.total_ns))
+        .unwrap_or_default();
+    let stat_out = price(model, w, &morphstack_sim::hindsight_static(model, w));
+    let stat = stat_out.cost.total();
+    rows.push(PolicyRow {
+        policy: "F hindsight-static".to_owned(),
+        outcome: stat_out,
+        total_ns: stat,
+        regret_vs_oracle: (stat - best) / best,
+    });
+    let switching = oracle_schedule
+        .iter()
+        .filter(|s| s.windows(2).any(|p| p[0] != p[1]))
+        .count();
+    rows.push(PolicyRow {
+        policy: "E oracle".to_owned(),
+        outcome: oracle_out,
+        total_ns: best,
+        regret_vs_oracle: 0.0,
+    });
+    #[allow(clippy::cast_precision_loss)]
+    let contexts_switching = switching as f64 / w.contexts.len().max(1) as f64;
+    SimReport {
+        trace: name.to_owned(),
+        profile: model.name.clone(),
+        contexts: w.contexts.len(),
+        steps: w.steps(),
+        best_fixed: best_fixed.0,
+        oracle_gain_over_best_fixed: (best_fixed.1 - best) / best_fixed.1,
+        heterogeneity_gain: (best_fixed.1 - stat) / best_fixed.1,
+        switching_gain: (stat - best) / best_fixed.1,
+        contexts_switching,
+        rows,
+    }
+}
+
+fn print_report(r: &SimReport) {
+    println!(
+        "{}: {} contexts, {} steps, profile {}",
+        r.trace, r.contexts, r.steps, r.profile
+    );
+    println!(
+        "  {:<22}{:>12}{:>11}{:>11}{:>11}{:>11}{:>10}{:>10}{:>9}  share C/S/H",
+        "policy", "total ms", "exec", "growth", "memory", "migrate", "migr #", "peak MiB", "regret"
+    );
+    for row in &r.rows {
+        let c = &row.outcome.cost;
+        let ms = |v: f64| v / 1e6;
+        #[allow(clippy::cast_precision_loss)]
+        let peak = row.outcome.peak_bytes as f64 / f64::from(1u32 << 20);
+        let sh = row.outcome.time_share;
+        println!(
+            "  {:<22}{:>12.3}{:>11.3}{:>11.3}{:>11.3}{:>11.3}{:>10}{:>10.1}{:>8.1}%  {:.0}/{:.0}/{:.0}",
+            row.policy,
+            ms(row.total_ns),
+            ms(c.exec),
+            ms(c.growth),
+            ms(c.memory),
+            ms(c.migration),
+            row.outcome.migrations,
+            peak,
+            row.regret_vs_oracle * 100.0,
+            sh[0] * 100.0,
+            sh[1] * 100.0,
+            sh[2] * 100.0,
+        );
+    }
+    println!(
+        "  best fixed: {}; oracle gain over it: {:.2}% (heterogeneity {:.2}% + switching {:.2}%); contexts the oracle migrates: {:.1}%",
+        r.best_fixed,
+        r.oracle_gain_over_best_fixed * 100.0,
+        r.heterogeneity_gain * 100.0,
+        r.switching_gain * 100.0,
+        r.contexts_switching * 100.0
+    );
+}
+
+fn sim(path: &Path, profile: Option<&Path>, json: bool) -> Result<ExitCode> {
+    let model = load_profile(profile)?;
+    let reader = open(path)?;
+    let header = reader.header().clone();
+    let w = Workload::from_events(&header, reader)
+        .with_context(|| format!("decoding {}", path.display()))?;
+    let r = simulate(&path.display().to_string(), &model, &w);
+    if json {
+        println!("{}", serde_json::to_string_pretty(&r)?);
+    } else {
+        print_report(&r);
+    }
+    Ok(ExitCode::SUCCESS)
+}
+
+fn characterize(
+    scale: f64,
+    seed: u64,
+    profile: Option<&Path>,
+    out: Option<&Path>,
+) -> Result<ExitCode> {
+    use morphstack_workloads::{Spec, Workload as Gen};
+    use std::fmt::Write as _;
+    let model = load_profile(profile)?;
+    let mut reports = Vec::new();
+    for g in Gen::ALL {
+        let spec = Spec {
+            workload: g,
+            seed,
+            scale,
+        };
+        let events = morphstack_workloads::generate_vec(&spec);
+        let w = Workload::from_events::<std::convert::Infallible>(
+            &morphstack_workloads::header(&spec),
+            events.into_iter().map(Ok),
+        )?;
+        let r = simulate(g.name(), &model, &w);
+        print_report(&r);
+        println!();
+        reports.push(r);
+    }
+    let mut md = String::new();
+    writeln!(
+        md,
+        "# Stage 2 workload characterization\n\nGenerated by `morphstack characterize --scale {scale} --seed {seed}` with profile `{}`. Costs in ms of CPU-equivalent time.\n",
+        model.name
+    )?;
+    writeln!(
+        md,
+        "| Workload | A contig | B seg | C heap | D static | F hindsight-static | Oracle | Best fixed | Oracle gain | from heterogeneity | from switching | Ctx switching |\n|---|---|---|---|---|---|---|---|---|---|---|---|"
+    )?;
+    for r in &reports {
+        let t: Vec<String> = r
+            .rows
+            .iter()
+            .map(|x| format!("{:.2}", x.total_ns / 1e6))
+            .collect();
+        writeln!(
+            md,
+            "| {} | {} | {:.1}% | {:.1}% | {:.1}% | {:.1}% |",
+            r.trace,
+            t.join(" | ") + " | " + r.best_fixed.split_whitespace().nth(1).unwrap_or(""),
+            r.oracle_gain_over_best_fixed * 100.0,
+            r.heterogeneity_gain * 100.0,
+            r.switching_gain * 100.0,
+            r.contexts_switching * 100.0
+        )?;
+    }
+    let winners: std::collections::BTreeSet<&str> =
+        reports.iter().map(|r| r.best_fixed.as_str()).collect();
+    writeln!(
+        md,
+        "\n**Go/no-go criterion 1** (no fixed representation wins everywhere): {}.  \n**Distinct best-fixed policies:** {}.",
+        if winners.len() > 1 { "met" } else { "NOT met" },
+        winners.into_iter().collect::<Vec<_>>().join(", ")
+    )?;
+    let _ = Rep::ALL;
+    if let Some(dir) = out {
+        std::fs::create_dir_all(dir)?;
+        std::fs::write(dir.join("report.md"), &md)?;
+        std::fs::write(
+            dir.join("report.json"),
+            serde_json::to_string_pretty(&reports)?,
+        )?;
+        println!("wrote {}", dir.display());
+    } else {
+        print!("{md}");
+    }
     Ok(ExitCode::SUCCESS)
 }
