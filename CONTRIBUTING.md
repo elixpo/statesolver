@@ -16,6 +16,11 @@ cargo clippy --workspace --all-targets -- -D warnings
 cargo test --workspace --all-targets
 ```
 
+## Tracking
+
+- Update [TODO.md](TODO.md) in the same commit as the work.
+- Record every finding, dead end, and model correction in [DISCOVERIES.md](DISCOVERIES.md), with its date and evidence.
+
 ## Rules for research code
 
 - **Determinism.** Every generator, simulation, and report must give the same output from the same seed and cost profile.

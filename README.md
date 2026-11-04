@@ -6,6 +6,8 @@ MorphStack studies whether a runtime can choose and migrate activation records a
 
 - Research plan: [morphstack_research_plan.md](morphstack_research_plan.md)
 - Stage tracking: [tracking-issues/](tracking-issues/) (mirrored as GitHub tracking issues)
+- Open work: [TODO.md](TODO.md)
+- What we have learned: [DISCOVERIES.md](DISCOVERIES.md)
 
 Status: Stage 1 (#1). The literature review is in progress; trace format v0 and the `morphstack trace` CLI are working.
 
