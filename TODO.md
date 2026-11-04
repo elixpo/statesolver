@@ -18,7 +18,8 @@ Findings go in [DISCOVERIES.md](DISCOVERIES.md), not here.
 - [x] Simulator and baselines A to D, plus F (per-context static choice in hindsight)
 - [x] Exact per-context oracle, with property tests
 - [x] `morphstack sim | characterize | profile` and the first report ([results/stage2](results/stage2))
-- [ ] **Sensitivity sweep** over memory price and migration-cost scale, showing where the switching share appears or vanishes (RQ3)
+- [x] Sensitivity sweep over memory price and migration-cost scale (`morphstack sweep`, [results/stage2/sweep.md](results/stage2/sweep.md))
+- [ ] **Calibrate the memory price**: this decides between the switching regime and the heterogeneity regime (see DISCOVERIES)
 - [ ] Per-context timeline output (`sim --timeline`) for paper graph 5
 - [ ] Calibration microbenchmarks that measure each cost parameter on x86-64 (and on aarch64 macOS)
 - [ ] Real traces: a Tokio HTTP server under load, Go `runtime/trace`, and possibly Python asyncio, each with a converter
@@ -30,6 +31,7 @@ Findings go in [DISCOVERIES.md](DISCOVERIES.md), not here.
 ## Stage 3: Online policies (#3)
 
 - [ ] `Policy` trait over causal observations, which never see `dt_ns`
+- [ ] Policies must defer migration to stack low points (DISCOVERIES, 2026-11-04)
 - [ ] P1 threshold with hysteresis; P2 rent-or-buy / work function; P3 lazy experts; P4 contextual bandit; P5 optional predictor
 - [ ] Report regret against the oracle **and** against F, keeping heterogeneity and switching separate
 - [ ] Theory: asymmetric MTS formulation and a competitive bound for P2

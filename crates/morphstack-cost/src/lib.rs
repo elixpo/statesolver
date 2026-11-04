@@ -208,6 +208,15 @@ pub struct CostModel {
     /// Migration matrix, indexed `[from][to]` by [`Rep::index`]. The diagonal
     /// is ignored.
     pub migration: [[Migration; 3]; 3],
+    /// Multiplier on the migration *mechanism* cost (fixed, copy, fix-up), for
+    /// sensitivity sweeps. Release and acquire are representation costs and
+    /// are never scaled, so cheap migration cannot undercut a cheaper exit.
+    #[serde(default = "one")]
+    pub migration_scale: f64,
+}
+
+fn one() -> f64 {
+    1.0
 }
 
 impl Default for CostModel {
@@ -260,6 +269,7 @@ impl Default for CostModel {
                 [m(50.0, 0.08, 2.0), zero, m(50.0, 0.10, 6.0)], // from segmented
                 [m(50.0, 0.10, 6.0), m(50.0, 0.10, 6.0), zero], // from heap
             ],
+            migration_scale: 1.0,
         }
     }
 }
@@ -433,9 +443,8 @@ impl CostModel {
         let m = &self.migration[from.index()][to.index()];
         self.release(from, live, frames)
             + self.acquire(to, live, frames, hwm)
-            + m.fixed_ns
-            + m.ns_per_byte * f(live)
-            + m.ns_per_frame * f(u64::from(frames))
+            + self.migration_scale
+                * (m.fixed_ns + m.ns_per_byte * f(live) + m.ns_per_frame * f(u64::from(frames)))
     }
 }
 
@@ -502,6 +511,22 @@ mod tests {
             for to in Rep::ALL {
                 if from != to {
                     assert!(m.migrate(from, to, 512, 2, 4096) + exit(to) > exit(from));
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn migrating_before_exit_never_pays_even_when_migration_is_nearly_free() {
+        let m = CostModel {
+            migration_scale: 0.0,
+            ..CostModel::default()
+        };
+        let exit = |m: &CostModel, r| m.step(r, &step(StepKind::Exit, 512, 0, 4096)).total();
+        for from in Rep::ALL {
+            for to in Rep::ALL {
+                if from != to {
+                    assert!(m.migrate(from, to, 512, 2, 4096) + exit(&m, to) > exit(&m, from));
                 }
             }
         }

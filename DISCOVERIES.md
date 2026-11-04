@@ -5,6 +5,24 @@ Each entry: **date**, the finding, the evidence (a commit or file), and what it 
 
 ---
 
+## 2026-11-04: The oracle migrates only at stack low points, so mechanism cost barely matters
+
+- **Finding:** Every oracle migration happens when the stack is nearly empty: 256 B live on W2, and about 1 KB on average over W6's 62 migrations. Scaling the copy and fix-up cost from 0.01× to 100× moves the switching gain only from 13.1% to 9.3% on W2, and from 3.7% to 0.6% on W6 at the default memory price.
+- **Evidence:** [results/stage2/sweep.md](results/stage2/sweep.md) and `report.json` (`bytes_migrated / migrations`).
+- **Implication:** This is a design rule for Stage 3. Online policies should defer migration to low-water marks (after unwinding, or at suspension with a shallow stack), not migrate deep stacks. It also means the claim does not depend on a fast migration mechanism, which strengthens it.
+
+## 2026-11-04: The value of switching depends on the memory price, not on migration cost
+
+- **Finding:** On W6, switching over time is worth 16–19% when memory is cheap (0.01–0.1× the default price) but under 4% at the default price or above. In the expensive regime, heterogeneity dominates, reaching a 68% total gain at 10×. On W2, switching is a steady 9–13% at every setting. On every other workload switching is about 0%. The only exception is server at 100× memory price with near-free migration, where it reaches 4.3%.
+- **Evidence:** [results/stage2/sweep.md](results/stage2/sweep.md), with a 5×5 grid per workload.
+- **Implication:** Two regimes for the paper. When memory is cheap, *switching* pays: grow segmented, compact into a contiguous stack. When memory is expensive, *heterogeneity* pays: per-context selection. The calibrated memory price on real hardware decides which regime the paper's headline lives in.
+
+## 2026-11-04: Model correction: sweeps must not scale allocation and release costs
+
+- **Finding:** The first sweep scaled the whole migration cost, including the cost of allocating the destination and freeing the source. At 0.01×, migrating right before exit became cheap again, which produced fake switching gains of 16–41% on server, burst, and W3.
+- **Fix:** `migration_scale` now multiplies only the mechanism cost (fixed, copy, fix-up). A unit test proves that migrating right before exit never pays, even when migration is free.
+- **Lesson:** This is the third time the oracle has exploited a flaw in the model. Every new knob needs an "exit exploit" check.
+
 ## 2026-11-04: Most of the oracle's gain comes from heterogeneity, not switching
 
 - **Finding:** With the uncalibrated profile, on W6 (the phase-change workload), the oracle beats the best fixed policy by **27.1%**. Of that, **23.9 points** come from giving each context its own fixed representation (baseline F, chosen in hindsight). Only **3.2 points** come from migrating contexts over time. In `mixed`, all 5.8% of the gain is heterogeneity.
