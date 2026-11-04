@@ -5,6 +5,17 @@ Each entry: **date**, the finding, the evidence (a commit or file), and what it 
 
 ---
 
+## 2026-11-04: Switching survives through one shared warm stack; the oracle rediscovers the Cog VM design
+
+- **Finding:** On W6, the warm-pool oracle runs CPU phases on a contiguous stack and compacts each worker into segments when it parks. On a single core only one worker runs at a time, so the pool's peak is **one 512 KB stack (0.5 MiB)** shared by all 32 workers.
+  - Charging the pool's idle resident memory at the default memory price costs 0.227 ms.
+  - Against a 0.674 ms switching gain, that leaves **+0.446 ms net, about 7.2% beyond F** (6.22 ms). The total gain over the best fixed policy is about 36%.
+- **W2 does not count:** it is a single context, so no earlier stack exists to reuse, and its first deep stack must page-fault. The "warm" 15% is unattainable there.
+- **Mixed:** the net is −0.01 ms, so there is no gain.
+- **Interpretation:** the cost-optimal schedule is "a few shared hot run stacks, with parked contexts compacted". The Cog VM uses this design (a small set of stack pages, contexts spilled to the heap), and the literature review lists it as prior art. The oracle finding it independently validates the model. Our potential contribution is the **cost-driven decision of when to spill and when to compact**, with regret against the oracle, not the mechanism.
+- **Evidence:** a scratch pool-pricing check (price idle pool bytes = peak contiguous capacity × duration − in-use area), not yet part of the simulator. Making it a first-class pool model is a TODO.
+- **Status of "test first":** granularity has no effect. Switching over time is worth about 7% on phase-changing, multi-context workloads, **only** with a shared warm stack pool. Heterogeneity is worth 5–29%. Still missing: a real trace.
+
 ## 2026-11-04: Finer granularity cannot help; switching depends on page faults for fresh stacks
 
 - **Test 1, granularity:** two new bounds on the calibrated profile.

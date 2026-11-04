@@ -25,7 +25,8 @@ Findings go in [DISCOVERIES.md](DISCOVERIES.md), not here.
 - [ ] **Research-direction decision**: test first, then decide (chosen 2026-11-04)
   - [x] Granularity: ideal and free-migration bounds show finer granularity is worth at most 0.1%
   - [x] Headroom is blocked by acquire and release, and in the end by page faults for fresh stacks; warm pools revive switching (W2 15%, W6 8%)
-  - [ ] Model a stack pool explicitly, with resident pool memory priced
+  - [x] Scratch check: W6 keeps about 7% net switching gain with a shared warm pool (peak 0.5 MiB) after pricing pool memory; W2's warm gain is unattainable (single context)
+  - [ ] Make the stack pool a first-class part of the simulator (global pool state, priced resident bytes, N cores)
   - [ ] A real trace (Python 3.12 `sys.monitoring` asyncio capture: exact per-coroutine call, return, yield, and resume)
 - [ ] Per-context timeline output (`sim --timeline`) for paper graph 5
 - [ ] Calibrate on aarch64 macOS as a second machine
