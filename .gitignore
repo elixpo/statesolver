@@ -1,0 +1,5 @@
+/target
+*.msb
+/results/**/raw/
+.env
+.env.local
