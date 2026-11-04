@@ -1,0 +1,1 @@
+{"class": "uaf-reuse", "reuse": true, "real_world": false, "expected_signal": "SIGSEGV", "language": "c"}

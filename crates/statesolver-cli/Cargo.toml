@@ -13,7 +13,11 @@ name = "statesolver"
 path = "src/main.rs"
 
 [dependencies]
+anyhow.workspace = true
 clap.workspace = true
+serde_json.workspace = true
+statesolver-analysis.workspace = true
+statesolver-trace.workspace = true
 
 [lints]
 workspace = true

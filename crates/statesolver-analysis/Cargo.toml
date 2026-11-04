@@ -8,5 +8,9 @@ license.workspace = true
 repository.workspace = true
 homepage.workspace = true
 
+[dependencies]
+serde.workspace = true
+statesolver-trace.workspace = true
+
 [lints]
 workspace = true

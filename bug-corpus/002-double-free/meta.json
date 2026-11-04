@@ -1,0 +1,1 @@
+{"class": "double-free", "reuse": false, "real_world": false, "expected_signal": "SIGABRT", "language": "c"}

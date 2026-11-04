@@ -34,7 +34,9 @@ proptest = "1.5"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 thiserror = "2.0"
+zstd = "0.13"
 statesolver-trace = { path = "crates/statesolver-trace" }
+statesolver-analysis = { path = "crates/statesolver-analysis" }
 
 [profile.release]
 lto = "thin"

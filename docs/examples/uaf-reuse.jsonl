@@ -1,0 +1,14 @@
+{"format":"statesolver-trace","version":0,"arch":"x86_64","os":"linux","recorder":"hand-written","program":{"path":"./uaf-reuse","argv":["./uaf-reuse"]},"description":"Research direction section 1: free(A), malloc reuses A's address as B, stale pointer to A writes into B, crash later"}
+{"id":0,"ev":"regs","full":true,"values":[["rax",0],["rbx",0],["rcx",0],["rdx",0],["rsi",0],["rdi",0],["rbp",0],["rsp",140737488216064],["rip",4198400],["rflags",514]]}
+{"id":1,"ev":"maps","op":"map","regions":[{"start":4194304,"len":8192,"perms":"r-x","path":"./uaf-reuse"},{"start":140737488216064,"len":135168,"perms":"rw-","path":"[stack]"}]}
+{"id":2,"ev":"syscall","pc":140737352368128,"nr":12,"args":[0,0,0,0,0,0],"ret":1431633920}
+{"id":3,"ev":"maps","op":"brk","regions":[{"start":1431633920,"len":135168,"perms":"rw-","path":"[heap]"}]}
+{"id":4,"ev":"alloc","alloc":41,"addr":1431633936,"size":32,"epoch":1,"kind":"malloc","caller":4198688}
+{"id":5,"ev":"syscall","pc":140737352372224,"nr":0,"args":[0,1431633936,8,0,0,0],"ret":8,"writes":[{"addr":1431633936,"data":"616c696365000000"}]}
+{"id":6,"ev":"mark","label":"stale-pointer-saved","pc":4198736}
+{"id":7,"ev":"free","alloc":41,"addr":1431633936,"epoch":1,"caller":4198800}
+{"id":8,"ev":"alloc","alloc":79,"addr":1431633936,"size":32,"epoch":2,"kind":"malloc","caller":4198848}
+{"id":9,"ev":"regs","full":false,"values":[["rax",1431633936],["rip",4198853]]}
+{"id":10,"ev":"mark","label":"root-cause:stale-write","pc":4198912}
+{"id":11,"ev":"regs","full":false,"values":[["rax",1094795585],["rip",4198976]]}
+{"id":12,"ev":"signal","signo":11,"code":1,"addr":1094795585,"pc":4198980,"fatal":true}

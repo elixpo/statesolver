@@ -6,6 +6,16 @@ MorphStack's log is archived at [docs/archive/morphstack/DISCOVERIES.md](docs/ar
 
 ---
 
+## 2026-11-04: A double free produces an "invalid" trace, and that must stay evidence
+
+- **Finding:** validator rule 7 (`free` must name a live allocation) is broken by exactly the bugs StateSolver exists to explain (bug-corpus 002). The recorder must still emit the event as it happened.
+- **Implication:** the spec separates **trace corruption** (rules 1–6, 8, 9) from **program misbehaviour** (rule 7). Analysis must consume rule-7 violations as evidence, never reject them. The CLI should eventually report them as "program anomalies", not "invalid trace".
+
+## 2026-11-04: Binary trace container = zstd-compressed JSONL
+
+- **Decision:** postcard (and other compact serde formats) cannot encode internally tagged enums or optional fields that are skipped. Supporting both would mean two parallel encodings of one data model. So `.ss` is zstd-compressed JSONL: one data model, streamable, inspectable with `zstdcat`.
+- **Revisit if:** trace size or decode speed becomes a measured bottleneck in the Stage 4 evaluation. Trace size is one of the reported metrics, so measure it before optimizing.
+
 ## 2026-11-04: Pivot to StateSolver, and what carries over
 
 - **Decision:** the maintainer locked [docs/research-direction.md](docs/research-direction.md) as the direction. MorphStack is archived (tag `morphstack-final`).

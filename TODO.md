@@ -8,9 +8,11 @@ Findings go in [DISCOVERIES.md](DISCOVERIES.md).
 - [x] Pivot from MorphStack: archived under the tag `morphstack-final`, the branch `archive/morphstack`, and [docs/archive/morphstack](docs/archive/morphstack/README.md)
 - [x] Research direction locked: [docs/research-direction.md](docs/research-direction.md)
 - [x] Crate skeleton and CI carried over
-- [ ] Literature review. Must cover allocation-identity temporal safety (CETS/lock-and-key), Undangle, Aftersight/PANDA/Arnold (analysis via replay), REPT/ARCUS (crash RCA), demand-driven slicing, and Pernosco's dataflow
-- [ ] `.ss` trace format v0: spec, JSONL and binary encodings, validator, property tests
-- [ ] `bug-corpus/` layout and the first 3 bugs (UAF with address reuse, double free, heap overflow)
+- [ ] Literature review scope: must cover allocation-identity temporal safety (CETS/lock-and-key), Undangle, Aftersight/PANDA/Arnold (analysis via replay), REPT/ARCUS (crash RCA), demand-driven slicing, and Pernosco's dataflow
+- [x] `.ss` trace format v0: [spec](docs/trace-format.md), JSONL and zstd containers, 9-rule validator, property tests
+- [x] Temporal heap (`statesolver-analysis::heap`), plus `statesolver allocations` and `statesolver lifetime` working on traces
+- [x] `bug-corpus/`: shared `ss_mark` markers and build script; 001 UAF with reuse (confirmed address reuse), 002 double free, 003 heap overflow driven by input. Each has a written ground truth.
+- [ ] Literature review (agent running)
 
 ## Stage 2: Recording backend (#2)
 

@@ -1,5 +1,7 @@
 /target
-*.msb
-/results/**/raw/
+*.ss
 .env
 .env.local
+/bug-corpus/001-uaf-reuse/001-uaf-reuse
+/bug-corpus/002-double-free/002-double-free
+/bug-corpus/003-heap-overflow-input/003-heap-overflow-input

@@ -1,0 +1,1 @@
+{"class": "heap-overflow-external-input", "reuse": false, "real_world": false, "expected_signal": "SIGSEGV", "stdin": "input/overflow.bin", "language": "c"}
