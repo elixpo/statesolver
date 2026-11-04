@@ -5,6 +5,18 @@ Each entry: **date**, the finding, the evidence (a commit or file), and what it 
 
 ---
 
+## 2026-11-04: A segment-boundary crossing costs about 1 ns, so per-context switching over time is worth nothing on this machine
+
+- **Finding:** Switching onto a cached segment and back with `corosensei::on_stack` costs **0.93 ns per crossing** (median of 9 repeats, range 0.88–1.16 ns), about 100× below the 100–120 ns threshold at which switching starts to pay. With every measurable parameter calibrated, **the oracle never migrates a context on any workload: the switching gain is 0.0%.** The heterogeneity gain remains: W6 28.8%, burst 7.1%, mixed 4.8%.
+- **Why segmented stacks looked bad historically:** the hot-split problem is mostly the cost of allocating and freeing a segment on every oscillation. The model prices that separately (11 + 7.7 ns measured with a warm allocator), so adv-hot-split costs segmented 2.42 ms against 0.27 ms for contiguous, about 9×, rather than the 48× under the default parameters.
+- **Caveats:**
+  - Warm-cache microbenchmark only.
+  - Real segmented code also needs a split check in every prologue (not yet measured) and argument copying across boundaries.
+  - Per-activation granularity (RQ5) is not yet explored and could behave differently.
+  - The per-call split-check sweep (0.4–2 ns) did not bring switching back.
+- **Evidence:** [results/profiles/x86_64-i5-13450hx.txt](results/profiles/x86_64-i5-13450hx.txt), [results/stage2/calibrated/report.md](results/stage2/calibrated/report.md).
+- **Implication: this is a research-direction decision.** On current x86-64 hardware, the plan's thesis of *switching over time* at context granularity looks like the **negative result** anticipated in plan section 25. Activation-state representation looks effectively like a per-context choice. **Online per-context selection**, which approaches F, is supported by robust gains of 5–29%. Options: (a) pivot the headline to online per-context selection, and report the switching negative result as a finding; (b) test whether finer granularity (per activation or per segment) or real traces revive switching before deciding.
+
 ## 2026-11-04: Calibrated allocator costs remove the switching gain, unless segment boundaries are expensive
 
 - **Finding:** Calibration on an x86-64 i5-13450HX gave these values (defaults in brackets):

@@ -38,6 +38,7 @@ serde_json = "1.0"
 thiserror = "2.0"
 toml = "0.8"
 memmap2 = "0.9"
+corosensei = "0.3"
 morphstack-trace = { path = "crates/morphstack-trace" }
 morphstack-workloads = { path = "crates/morphstack-workloads" }
 morphstack-cost = { path = "crates/morphstack-cost" }

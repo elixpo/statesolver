@@ -1,0 +1,18 @@
+linux x86_64 / 13th Gen Intel(R) Core(TM) i5-13450HX
+  contiguous.touch_ns_per_byte          0.2429 ns/byte  [0.2393 .. 0.3790]  write one byte per 4 KiB page of a fresh 64 MiB anonymous map (fault + zeroing)
+  contiguous.copy_ns_per_byte           0.0157 ns/byte  [0.0154 .. 0.0157]  copy_from_slice of a warm 256 KiB block
+  contiguous.alloc_ns                 424.6565 ns       [415.5145 .. 472.1505]  mmap of an untouched min-size stack (no guard page)
+  contiguous.free_ns                  678.2790 ns       [659.8840 .. 783.1100]  munmap of an untouched min-size stack
+  segmented.alloc_ns                   11.4610 ns       [11.2638 .. 15.7982]  malloc of a segment, LIFO at depth 16 (warm allocator)
+  segmented.free_ns                     7.9286 ns       [6.3483 .. 8.6636]  free of a segment, LIFO
+  heap.alloc_ns                         9.2497 ns       [9.1161 .. 28.9046]  malloc of a 128-byte frame, LIFO at depth 32 (warm allocator)
+  heap.free_ns                          5.5812 ns       [5.4091 .. 8.3187]  free of a 128-byte frame, LIFO
+  segmented.boundary_ns                 0.9470 ns       [0.8833 .. 1.1638]  half the extra cost of corosensei::on_stack onto a cached segment vs. a plain call (upper estimate)
+not measured:
+  common.call_ns / return_ns / switch_ns                           needs the Stage 4 runtime
+  contiguous.check_ns, segmented.check_ns                          needs the Stage 4 runtime
+  contiguous.grow_fixed_ns                                         needs the Stage 4 runtime (relocation bookkeeping)
+  heap.locality_ns                                                 needs the Stage 4 runtime and hardware counters
+  migration.*.fixed_ns / ns_per_frame                              needs the Stage 4 migration engine
+  memory.ns_per_byte_second                                        economic parameter, not a hardware measurement; see docs/simulator.md
+wrote results/profiles/x86_64-i5-13450hx.toml

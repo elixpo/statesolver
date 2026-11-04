@@ -3,67 +3,75 @@
   "measurements": [
     {
       "parameter": "contiguous.touch_ns_per_byte",
-      "value": 0.2453555017709732,
-      "min": 0.24026037752628326,
-      "max": 0.4177681505680084,
+      "value": 0.2429100126028061,
+      "min": 0.23928837478160858,
+      "max": 0.3790312558412552,
       "unit": "ns/byte",
       "method": "write one byte per 4 KiB page of a fresh 64 MiB anonymous map (fault + zeroing)"
     },
     {
       "parameter": "contiguous.copy_ns_per_byte",
-      "value": 0.015392187118530274,
-      "min": 0.015349737167358398,
-      "max": 0.015533742904663085,
+      "value": 0.01565791320800781,
+      "min": 0.015439292907714845,
+      "max": 0.015714204788208008,
       "unit": "ns/byte",
       "method": "copy_from_slice of a warm 256 KiB block"
     },
     {
       "parameter": "contiguous.alloc_ns",
-      "value": 403.849,
-      "min": 398.344,
-      "max": 448.4955,
+      "value": 424.6565,
+      "min": 415.5145,
+      "max": 472.1505,
       "unit": "ns",
       "method": "mmap of an untouched min-size stack (no guard page)"
     },
     {
       "parameter": "contiguous.free_ns",
-      "value": 676.1795,
-      "min": 634.792,
-      "max": 764.245,
+      "value": 678.279,
+      "min": 659.884,
+      "max": 783.11,
       "unit": "ns",
       "method": "munmap of an untouched min-size stack"
     },
     {
       "parameter": "segmented.alloc_ns",
-      "value": 11.14503125,
-      "min": 11.00184375,
-      "max": 11.44690625,
+      "value": 11.46103125,
+      "min": 11.26378125,
+      "max": 15.7981875,
       "unit": "ns",
       "method": "malloc of a segment, LIFO at depth 16 (warm allocator)"
     },
     {
       "parameter": "segmented.free_ns",
-      "value": 7.74134375,
-      "min": 7.5075625,
-      "max": 9.688375,
+      "value": 7.92859375,
+      "min": 6.3483125,
+      "max": 8.66359375,
       "unit": "ns",
       "method": "free of a segment, LIFO"
     },
     {
       "parameter": "heap.alloc_ns",
-      "value": 9.20415625,
-      "min": 9.13540625,
-      "max": 9.318015625,
+      "value": 9.24971875,
+      "min": 9.116125,
+      "max": 28.9045625,
       "unit": "ns",
       "method": "malloc of a 128-byte frame, LIFO at depth 32 (warm allocator)"
     },
     {
       "parameter": "heap.free_ns",
-      "value": 5.399109375,
-      "min": 5.315828125,
-      "max": 20.50190625,
+      "value": 5.58115625,
+      "min": 5.409109375,
+      "max": 8.31871875,
       "unit": "ns",
       "method": "free of a 128-byte frame, LIFO"
+    },
+    {
+      "parameter": "segmented.boundary_ns",
+      "value": 0.94699,
+      "min": 0.8832575,
+      "max": 1.163805,
+      "unit": "ns",
+      "method": "half the extra cost of corosensei::on_stack onto a cached segment vs. a plain call (upper estimate)"
     }
   ],
   "not_measured": [
@@ -72,7 +80,7 @@
       "needs the Stage 4 runtime"
     ],
     [
-      "contiguous.check_ns, segmented.check_ns, segmented.boundary_ns",
+      "contiguous.check_ns, segmented.check_ns",
       "needs the Stage 4 runtime"
     ],
     [

@@ -8,8 +8,8 @@
       {
         "policy": "A always-contiguous",
         "cost": {
-          "exec": 380608.22850097326,
-          "growth": 678.8986734002829,
+          "exec": 380631.1355009733,
+          "growth": 672.1320048719645,
           "memory": 6.046383103995591,
           "migration": 0.0
         },
@@ -22,13 +22,13 @@
           0.0,
           0.0
         ],
-        "total_ns": 381293.17355747754,
+        "total_ns": 381309.3138889493,
         "regret_vs_oracle": 0.0
       },
       {
         "policy": "B always-segmented",
         "cost": {
-          "exec": 407660.2863757967,
+          "exec": 407660.7896257967,
           "growth": 0.0,
           "memory": 3.0468102360062694,
           "migration": 0.0
@@ -42,13 +42,13 @@
           1.0,
           0.0
         ],
-        "total_ns": 407663.3331860327,
-        "regret_vs_oracle": 0.06915980001037192
+        "total_ns": 407663.8364360327,
+        "regret_vs_oracle": 0.06911586364963225
       },
       {
         "policy": "C always-heap",
         "cost": {
-          "exec": 2755567.239120469,
+          "exec": 2787561.606123194,
           "growth": 0.0,
           "memory": 1.057265543625144,
           "migration": 0.0
@@ -62,13 +62,13 @@
           0.0,
           1.0
         ],
-        "total_ns": 2755568.296386013,
-        "regret_vs_oracle": 6.226901732009709
+        "total_ns": 2787562.663388738,
+        "regret_vs_oracle": 6.310502423763439
       },
       {
         "policy": "D static-can-suspend",
         "cost": {
-          "exec": 2755567.239120469,
+          "exec": 2787561.606123194,
           "growth": 0.0,
           "memory": 1.057265543625144,
           "migration": 0.0
@@ -82,14 +82,14 @@
           0.0,
           1.0
         ],
-        "total_ns": 2755568.296386013,
-        "regret_vs_oracle": 6.226901732009709
+        "total_ns": 2787562.663388738,
+        "regret_vs_oracle": 6.310502423763439
       },
       {
         "policy": "F hindsight-static",
         "cost": {
-          "exec": 380608.22850097326,
-          "growth": 678.8986734002829,
+          "exec": 380631.1355009733,
+          "growth": 672.1320048719645,
           "memory": 6.046383103995591,
           "migration": 0.0
         },
@@ -102,14 +102,14 @@
           0.0,
           0.0
         ],
-        "total_ns": 381293.17355747754,
+        "total_ns": 381309.3138889493,
         "regret_vs_oracle": 0.0
       },
       {
         "policy": "E oracle",
         "cost": {
-          "exec": 380608.22850097326,
-          "growth": 678.8986734002829,
+          "exec": 380631.1355009733,
+          "growth": 672.1320048719645,
           "memory": 6.046383103995591,
           "migration": 0.0
         },
@@ -122,7 +122,7 @@
           0.0,
           0.0
         ],
-        "total_ns": 381293.17355747754,
+        "total_ns": 381309.3138889493,
         "regret_vs_oracle": 0.0
       }
     ],
@@ -141,8 +141,8 @@
       {
         "policy": "A always-contiguous",
         "cost": {
-          "exec": 271082.72850045335,
-          "growth": 1643961.6745358526,
+          "exec": 271105.6355004535,
+          "growth": 1629352.8785695303,
           "memory": 376.17840537647896,
           "migration": 0.0
         },
@@ -155,14 +155,14 @@
           0.0,
           0.0
         ],
-        "total_ns": 1915420.5814416823,
-        "regret_vs_oracle": 3.522332616026858
+        "total_ns": 1900834.6924753601,
+        "regret_vs_oracle": 4.458724307025102
       },
       {
         "policy": "B always-segmented",
         "cost": {
-          "exec": 290021.78637469804,
-          "growth": 133410.91737500663,
+          "exec": 290022.28962469805,
+          "growth": 58082.958044996325,
           "memory": 114.33360300002606,
           "migration": 0.0
         },
@@ -175,13 +175,13 @@
           1.0,
           0.0
         ],
-        "total_ns": 423547.0373527047,
+        "total_ns": 348219.5812726944,
         "regret_vs_oracle": 0.0
       },
       {
         "policy": "C always-heap",
         "cost": {
-          "exec": 1960360.7690283502,
+          "exec": 1983122.1617506165,
           "growth": 0.0,
           "memory": 129.4498778945005,
           "migration": 0.0
@@ -195,13 +195,13 @@
           0.0,
           1.0
         ],
-        "total_ns": 1960490.2189062447,
-        "regret_vs_oracle": 3.6287426094629143
+        "total_ns": 1983251.611628511,
+        "regret_vs_oracle": 4.695405193412734
       },
       {
         "policy": "D static-can-suspend",
         "cost": {
-          "exec": 1960360.7690283502,
+          "exec": 1983122.1617506165,
           "growth": 0.0,
           "memory": 129.4498778945005,
           "migration": 0.0
@@ -215,14 +215,14 @@
           0.0,
           1.0
         ],
-        "total_ns": 1960490.2189062447,
-        "regret_vs_oracle": 3.6287426094629143
+        "total_ns": 1983251.611628511,
+        "regret_vs_oracle": 4.695405193412734
       },
       {
         "policy": "F hindsight-static",
         "cost": {
-          "exec": 290021.78637469804,
-          "growth": 133410.91737500663,
+          "exec": 290022.28962469805,
+          "growth": 58082.958044996325,
           "memory": 114.33360300002606,
           "migration": 0.0
         },
@@ -235,14 +235,14 @@
           1.0,
           0.0
         ],
-        "total_ns": 423547.0373527047,
+        "total_ns": 348219.5812726944,
         "regret_vs_oracle": 0.0
       },
       {
         "policy": "E oracle",
         "cost": {
-          "exec": 290021.78637469804,
-          "growth": 133410.91737500663,
+          "exec": 290022.28962469805,
+          "growth": 58082.958044996325,
           "memory": 114.33360300002606,
           "migration": 0.0
         },
@@ -255,7 +255,7 @@
           1.0,
           0.0
         ],
-        "total_ns": 423547.0373527047,
+        "total_ns": 348219.5812726944,
         "regret_vs_oracle": 0.0
       }
     ],
@@ -274,8 +274,8 @@
       {
         "policy": "A always-contiguous",
         "cost": {
-          "exec": 113543932.72827467,
-          "growth": 9422877.30944772,
+          "exec": 115834655.63560978,
+          "growth": 9328958.30528073,
           "memory": 340742286.7704709,
           "migration": 0.0
         },
@@ -288,13 +288,13 @@
           0.0,
           0.0
         ],
-        "total_ns": 463709096.8081933,
-        "regret_vs_oracle": 14.295978121611515
+        "total_ns": 465905900.7113614,
+        "regret_vs_oracle": 14.333906272113556
       },
       {
         "policy": "B always-segmented",
         "cost": {
-          "exec": 7468659.286359039,
+          "exec": 7518984.789614335,
           "growth": 0.0,
           "memory": 171702167.94293532,
           "migration": 0.0
@@ -308,13 +308,13 @@
           1.0,
           0.0
         ],
-        "total_ns": 179170827.22929436,
-        "regret_vs_oracle": 4.910155897726394
+        "total_ns": 179221152.73254967,
+        "regret_vs_oracle": 4.898530913184566
       },
       {
         "policy": "C always-heap",
         "cost": {
-          "exec": 10381013.89405024,
+          "exec": 10449297.161745805,
           "growth": 0.0,
           "memory": 19934876.233223766,
           "migration": 0.0
@@ -328,13 +328,13 @@
           0.0,
           1.0
         ],
-        "total_ns": 30315890.127274007,
-        "regret_vs_oracle": 4.518599662718989e-6
+        "total_ns": 30384173.39496957,
+        "regret_vs_oracle": 4.6496143212419025e-6
       },
       {
         "policy": "D static-can-suspend",
         "cost": {
-          "exec": 10381013.89405024,
+          "exec": 10449297.161745805,
           "growth": 0.0,
           "memory": 19934876.233223766,
           "migration": 0.0
@@ -348,53 +348,53 @@
           0.0,
           1.0
         ],
-        "total_ns": 30315890.127274007,
-        "regret_vs_oracle": 4.518599662718989e-6
+        "total_ns": 30384173.39496957,
+        "regret_vs_oracle": 4.6496143212419025e-6
       },
       {
         "policy": "F hindsight-static",
         "cost": {
-          "exec": 10380302.51176898,
+          "exec": 10448552.214620806,
           "growth": 0.0,
-          "memory": 19935450.630753104,
+          "memory": 19935479.90631788,
           "migration": 0.0
         },
         "migrations": 0,
         "bytes_migrated": 0,
-        "peak_bytes": 48091481,
-        "mean_bytes": 957499.0115387052,
+        "peak_bytes": 48095254,
+        "mean_bytes": 957500.4176430795,
         "time_share": [
           0.0,
-          3.7677203046324493e-6,
-          0.9999962322796954
+          3.953595087009148e-6,
+          0.999996046404913
         ],
-        "total_ns": 30315753.14252208,
+        "total_ns": 30384032.120938685,
         "regret_vs_oracle": 0.0
       },
       {
         "policy": "E oracle",
         "cost": {
-          "exec": 10380302.51176898,
+          "exec": 10448552.214620806,
           "growth": 0.0,
-          "memory": 19935450.630753104,
+          "memory": 19935479.90631788,
           "migration": 0.0
         },
         "migrations": 0,
         "bytes_migrated": 0,
-        "peak_bytes": 48091481,
-        "mean_bytes": 957499.0115387052,
+        "peak_bytes": 48095254,
+        "mean_bytes": 957500.4176430795,
         "time_share": [
           0.0,
-          3.7677203046324493e-6,
-          0.9999962322796954
+          3.953595087009148e-6,
+          0.999996046404913
         ],
-        "total_ns": 30315753.14252208,
+        "total_ns": 30384032.120938685,
         "regret_vs_oracle": 0.0
       }
     ],
     "best_fixed": "C always-heap",
-    "oracle_gain_over_best_fixed": 4.518579245068336e-6,
-    "heterogeneity_gain": 4.518579245068336e-6,
+    "oracle_gain_over_best_fixed": 4.649592702429085e-6,
+    "heterogeneity_gain": 4.649592702429085e-6,
     "switching_gain": 0.0,
     "contexts_switching": 0.0
   },
@@ -407,8 +407,8 @@
       {
         "policy": "A always-contiguous",
         "cost": {
-          "exec": 7161577.3524995195,
-          "growth": 22172.040628537536,
+          "exec": 7163066.307499513,
+          "growth": 21951.049108877778,
           "memory": 8578.245351423771,
           "migration": 0.0
         },
@@ -421,13 +421,13 @@
           0.0,
           0.0
         ],
-        "total_ns": 7192327.6384794805,
-        "regret_vs_oracle": 0.006181873943642261
+        "total_ns": 7193595.601959814,
+        "regret_vs_oracle": 0.0063546523976739655
       },
       {
         "policy": "B always-segmented",
         "cost": {
-          "exec": 7143816.114374533,
+          "exec": 7143848.825624537,
           "growth": 0.0,
           "memory": 4322.631446615967,
           "migration": 0.0
@@ -441,13 +441,13 @@
           1.0,
           0.0
         ],
-        "total_ns": 7148138.745821149,
+        "total_ns": 7148171.4570711525,
         "regret_vs_oracle": 0.0
       },
       {
         "policy": "C always-heap",
         "cost": {
-          "exec": 11420659.424529513,
+          "exec": 11478957.01375092,
           "growth": 0.0,
           "memory": 1321.1891156471331,
           "migration": 0.0
@@ -461,13 +461,13 @@
           0.0,
           1.0
         ],
-        "total_ns": 11421980.61364516,
-        "regret_vs_oracle": 0.5978957627707673
+        "total_ns": 11480278.202866567,
+        "regret_vs_oracle": 0.6060440452236194
       },
       {
         "policy": "D static-can-suspend",
         "cost": {
-          "exec": 11420659.424529513,
+          "exec": 11478957.01375092,
           "growth": 0.0,
           "memory": 1321.1891156471331,
           "migration": 0.0
@@ -481,13 +481,13 @@
           0.0,
           1.0
         ],
-        "total_ns": 11421980.61364516,
-        "regret_vs_oracle": 0.5978957627707673
+        "total_ns": 11480278.202866567,
+        "regret_vs_oracle": 0.6060440452236194
       },
       {
         "policy": "F hindsight-static",
         "cost": {
-          "exec": 7143816.114374533,
+          "exec": 7143848.825624537,
           "growth": 0.0,
           "memory": 4322.631446615967,
           "migration": 0.0
@@ -501,13 +501,13 @@
           1.0,
           0.0
         ],
-        "total_ns": 7148138.745821149,
+        "total_ns": 7148171.4570711525,
         "regret_vs_oracle": 0.0
       },
       {
         "policy": "E oracle",
         "cost": {
-          "exec": 7143816.114374533,
+          "exec": 7143848.825624537,
           "growth": 0.0,
           "memory": 4322.631446615967,
           "migration": 0.0
@@ -521,7 +521,7 @@
           1.0,
           0.0
         ],
-        "total_ns": 7148138.745821149,
+        "total_ns": 7148171.4570711525,
         "regret_vs_oracle": 0.0
       }
     ],
@@ -540,8 +540,8 @@
       {
         "policy": "A always-contiguous",
         "cost": {
-          "exec": 12004347.828500167,
-          "growth": 27066610.860677015,
+          "exec": 12233440.735500414,
+          "growth": 26818176.17804873,
           "memory": 947887416.9606682,
           "migration": 0.0
         },
@@ -554,14 +554,14 @@
           0.0,
           0.0
         ],
-        "total_ns": 986958375.6498454,
-        "regret_vs_oracle": 0.44258742056440553
+        "total_ns": 986939033.8742174,
+        "regret_vs_oracle": 0.4425022993269575
       },
       {
         "policy": "B always-segmented",
         "cost": {
-          "exec": 1443938.236375018,
-          "growth": 666321.2912500226,
+          "exec": 1448971.2396250546,
+          "growth": 290095.5361500302,
           "memory": 826514673.2075945,
           "migration": 0.0
         },
@@ -574,13 +574,13 @@
           1.0,
           0.0
         ],
-        "total_ns": 828624932.7352196,
-        "regret_vs_oracle": 0.21115939012401425
+        "total_ns": 828253739.9833696,
+        "regret_vs_oracle": 0.21056912670902747
       },
       {
         "policy": "C always-heap",
         "cost": {
-          "exec": 5750031.910703108,
+          "exec": 5811569.519374644,
           "growth": 0.0,
           "memory": 680450807.9215099,
           "migration": 0.0
@@ -594,13 +594,13 @@
           0.0,
           1.0
         ],
-        "total_ns": 686200839.8322129,
-        "regret_vs_oracle": 0.0029852564662572567
+        "total_ns": 686262377.4408845,
+        "regret_vs_oracle": 0.0030356723394371855
       },
       {
         "policy": "D static-can-suspend",
         "cost": {
-          "exec": 5750031.910703108,
+          "exec": 5811569.519374644,
           "growth": 0.0,
           "memory": 680450807.9215099,
           "migration": 0.0
@@ -614,53 +614,53 @@
           0.0,
           1.0
         ],
-        "total_ns": 686200839.8322129,
-        "regret_vs_oracle": 0.0029852564662572567
+        "total_ns": 686262377.4408845,
+        "regret_vs_oracle": 0.0030356723394371855
       },
       {
         "policy": "F hindsight-static",
         "cost": {
-          "exec": 5276396.909515612,
-          "growth": 49961.87525000008,
-          "memory": 678832092.606487,
+          "exec": 5327734.408999862,
+          "growth": 21943.39675500028,
+          "memory": 678835736.896671,
           "migration": 0.0
         },
         "migrations": 0,
         "bytes_migrated": 0,
-        "peak_bytes": 80136898,
-        "mean_bytes": 12140219.14768447,
+        "peak_bytes": 80137500,
+        "mean_bytes": 12140284.322095035,
         "time_share": [
           0.0,
-          0.10151662347169126,
-          0.8984833765283088
+          0.10221234217627022,
+          0.8977876578237298
         ],
-        "total_ns": 684158451.3912526,
+        "total_ns": 684185414.702426,
         "regret_vs_oracle": 0.0
       },
       {
         "policy": "E oracle",
         "cost": {
-          "exec": 5276396.909515612,
-          "growth": 49961.87525000008,
-          "memory": 678832092.606487,
+          "exec": 5327734.408999862,
+          "growth": 21943.39675500028,
+          "memory": 678835736.896671,
           "migration": 0.0
         },
         "migrations": 0,
         "bytes_migrated": 0,
-        "peak_bytes": 80136898,
-        "mean_bytes": 12140219.14768447,
+        "peak_bytes": 80137500,
+        "mean_bytes": 12140284.322095035,
         "time_share": [
           0.0,
-          0.10151662347169126,
-          0.8984833765283088
+          0.10221234217627022,
+          0.8977876578237298
         ],
-        "total_ns": 684158451.3912526,
+        "total_ns": 684185414.702426,
         "regret_vs_oracle": 0.0
       }
     ],
     "best_fixed": "C always-heap",
-    "oracle_gain_over_best_fixed": 0.0029763712347826397,
-    "heterogeneity_gain": 0.0029763712347826397,
+    "oracle_gain_over_best_fixed": 0.003026484922871102,
+    "heterogeneity_gain": 0.003026484922871102,
     "switching_gain": 0.0,
     "contexts_switching": 0.0
   },
@@ -673,8 +673,8 @@
       {
         "policy": "A always-contiguous",
         "cost": {
-          "exec": 25588562.440505493,
-          "growth": 8770872.804956045,
+          "exec": 26047458.371484272,
+          "growth": 8690848.338799993,
           "memory": 10175020.089685392,
           "migration": 0.0
         },
@@ -687,14 +687,14 @@
           0.0,
           0.0
         ],
-        "total_ns": 44534455.335146934,
-        "regret_vs_oracle": 5.362382818083993
+        "total_ns": 44913326.79996966,
+        "regret_vs_oracle": 6.218082064488434
       },
       {
         "policy": "B always-segmented",
         "cost": {
-          "exec": 4548891.25037265,
-          "growth": 1400887.9619999942,
+          "exec": 4558972.857623943,
+          "growth": 609902.9848799885,
           "memory": 3564789.4503274155,
           "migration": 0.0
         },
@@ -707,13 +707,13 @@
           1.0,
           0.0
         ],
-        "total_ns": 9514568.662700059,
-        "regret_vs_oracle": 0.35929198472240664
+        "total_ns": 8733665.292831346,
+        "regret_vs_oracle": 0.4035992721757955
       },
       {
         "policy": "C always-heap",
         "cost": {
-          "exec": 22685431.83749567,
+          "exec": 22938300.84577898,
           "growth": 0.0,
           "memory": 460833.79311411636,
           "migration": 0.0
@@ -727,13 +727,13 @@
           0.0,
           1.0
         ],
-        "total_ns": 23146265.630609784,
-        "regret_vs_oracle": 2.3067745331731215
+        "total_ns": 23399134.638893094,
+        "regret_vs_oracle": 2.760506871685541
       },
       {
         "policy": "D static-can-suspend",
         "cost": {
-          "exec": 22685431.83749567,
+          "exec": 22938300.84577898,
           "growth": 0.0,
           "memory": 460833.79311411636,
           "migration": 0.0
@@ -747,14 +747,14 @@
           0.0,
           1.0
         ],
-        "total_ns": 23146265.630609784,
-        "regret_vs_oracle": 2.3067745331731215
+        "total_ns": 23399134.638893094,
+        "regret_vs_oracle": 2.760506871685541
       },
       {
         "policy": "F hindsight-static",
         "cost": {
-          "exec": 5130847.886438133,
-          "growth": 1400887.9619999942,
+          "exec": 5144517.775747998,
+          "growth": 609902.9848799885,
           "memory": 467914.535466046,
           "migration": 0.0
         },
@@ -767,14 +767,14 @@
           0.007917440310721094,
           0.9920825596892789
         ],
-        "total_ns": 6999650.383904173,
+        "total_ns": 6222335.296094032,
         "regret_vs_oracle": 0.0
       },
       {
         "policy": "E oracle",
         "cost": {
-          "exec": 5130847.886438133,
-          "growth": 1400887.9619999942,
+          "exec": 5144517.775747998,
+          "growth": 609902.9848799885,
           "memory": 467914.535466046,
           "migration": 0.0
         },
@@ -787,13 +787,13 @@
           0.007917440310721094,
           0.9920825596892789
         ],
-        "total_ns": 6999650.383904173,
+        "total_ns": 6222335.296094032,
         "regret_vs_oracle": 0.0
       }
     ],
     "best_fixed": "B always-segmented",
-    "oracle_gain_over_best_fixed": 0.2643228892398574,
-    "heterogeneity_gain": 0.2643228892398574,
+    "oracle_gain_over_best_fixed": 0.2875459400532136,
+    "heterogeneity_gain": 0.2875459400532136,
     "switching_gain": 0.0,
     "contexts_switching": 0.0
   },
@@ -806,8 +806,8 @@
       {
         "policy": "A always-contiguous",
         "cost": {
-          "exec": 25396716.428497497,
-          "growth": 8765330.207878053,
+          "exec": 25854879.335498028,
+          "growth": 8677965.0584355,
           "memory": 68730.05645516772,
           "migration": 0.0
         },
@@ -820,13 +820,13 @@
           0.0,
           0.0
         ],
-        "total_ns": 34230776.69283071,
-        "regret_vs_oracle": 7.022833412978228
+        "total_ns": 34601574.45038869,
+        "regret_vs_oracle": 7.090652510137303
       },
       {
         "policy": "B always-segmented",
         "cost": {
-          "exec": 4232499.186374407,
+          "exec": 4242564.689625441,
           "growth": 0.0,
           "memory": 34633.505010611974,
           "migration": 0.0
@@ -840,13 +840,13 @@
           1.0,
           0.0
         ],
-        "total_ns": 4267132.69138502,
-        "regret_vs_oracle": 0.00010861691097758484
+        "total_ns": 4277198.194636053,
+        "regret_vs_oracle": 0.00010837250783514111
       },
       {
         "policy": "C always-heap",
         "cost": {
-          "exec": 9131621.682765711,
+          "exec": 9204100.018872188,
           "growth": 0.0,
           "memory": 7705.988406755647,
           "migration": 0.0
@@ -860,13 +860,13 @@
           0.0,
           1.0
         ],
-        "total_ns": 9139327.671172466,
-        "regret_vs_oracle": 1.1420286215064406
+        "total_ns": 9211806.007278943,
+        "regret_vs_oracle": 1.1539343969029145
       },
       {
         "policy": "D static-can-suspend",
         "cost": {
-          "exec": 9131621.682765711,
+          "exec": 9204100.018872188,
           "growth": 0.0,
           "memory": 7705.988406755647,
           "migration": 0.0
@@ -880,13 +880,13 @@
           0.0,
           1.0
         ],
-        "total_ns": 9139327.671172466,
-        "regret_vs_oracle": 1.1420286215064406
+        "total_ns": 9211806.007278943,
+        "regret_vs_oracle": 1.1539343969029145
       },
       {
         "policy": "F hindsight-static",
         "cost": {
-          "exec": 4232511.606530657,
+          "exec": 4242577.061750441,
           "growth": 0.0,
           "memory": 34157.65241929193,
           "migration": 0.0
@@ -900,13 +900,13 @@
           0.9850429015473521,
           0.014957098452647956
         ],
-        "total_ns": 4266669.258949949,
+        "total_ns": 4276734.714169733,
         "regret_vs_oracle": 0.0
       },
       {
         "policy": "E oracle",
         "cost": {
-          "exec": 4232511.606530657,
+          "exec": 4242577.061750441,
           "growth": 0.0,
           "memory": 34157.65241929193,
           "migration": 0.0
@@ -920,13 +920,13 @@
           0.9850429015473521,
           0.014957098452647956
         ],
-        "total_ns": 4266669.258949949,
+        "total_ns": 4276734.714169733,
         "regret_vs_oracle": 0.0
       }
     ],
     "best_fixed": "B always-segmented",
-    "oracle_gain_over_best_fixed": 0.00010860511462551784,
-    "heterogeneity_gain": 0.00010860511462551784,
+    "oracle_gain_over_best_fixed": 0.00010836076450734052,
+    "heterogeneity_gain": 0.00010836076450734052,
     "switching_gain": 0.0,
     "contexts_switching": 0.0
   },
@@ -939,8 +939,8 @@
       {
         "policy": "A always-contiguous",
         "cost": {
-          "exec": 56773007.72844156,
-          "growth": 5493385.780123696,
+          "exec": 57918380.63551441,
+          "growth": 5438632.512620464,
           "memory": 3290043.0871490263,
           "migration": 0.0
         },
@@ -953,13 +953,13 @@
           0.0,
           0.0
         ],
-        "total_ns": 65556436.59571428,
-        "regret_vs_oracle": 12.10257821924436
+        "total_ns": 66647056.2352839,
+        "regret_vs_oracle": 12.245541814274807
       },
       {
         "policy": "B always-segmented",
         "cost": {
-          "exec": 3734840.5363770337,
+          "exec": 3760003.5396291516,
           "growth": 0.0,
           "memory": 1657873.2743837088,
           "migration": 0.0
@@ -973,13 +973,13 @@
           1.0,
           0.0
         ],
-        "total_ns": 5392713.810760742,
-        "regret_vs_oracle": 0.07782634610300355
+        "total_ns": 5417876.814012861,
+        "regret_vs_oracle": 0.07675744343836642
       },
       {
         "policy": "C always-heap",
         "cost": {
-          "exec": 5191024.050283106,
+          "exec": 5225165.911748039,
           "growth": 0.0,
           "memory": 217909.9977598298,
           "migration": 0.0
@@ -993,13 +993,13 @@
           0.0,
           1.0
         ],
-        "total_ns": 5408934.048042936,
-        "regret_vs_oracle": 0.08106823871890799
+        "total_ns": 5443075.909507869,
+        "regret_vs_oracle": 0.08176555170173373
       },
       {
         "policy": "D static-can-suspend",
         "cost": {
-          "exec": 5191024.050283106,
+          "exec": 5225165.911748039,
           "growth": 0.0,
           "memory": 217909.9977598298,
           "migration": 0.0
@@ -1013,53 +1013,53 @@
           0.0,
           1.0
         ],
-        "total_ns": 5408934.048042936,
-        "regret_vs_oracle": 0.08106823871890799
+        "total_ns": 5443075.909507869,
+        "regret_vs_oracle": 0.08176555170173373
       },
       {
         "policy": "F hindsight-static",
         "cost": {
-          "exec": 4251793.694813092,
+          "exec": 4275279.86375187,
           "growth": 0.0,
-          "memory": 751529.7350313121,
+          "memory": 756379.6311778069,
           "migration": 0.0
         },
         "migrations": 0,
         "bytes_migrated": 0,
-        "peak_bytes": 14537721,
-        "mean_bytes": 2219174.65996077,
+        "peak_bytes": 14612851,
+        "mean_bytes": 2233495.80539262,
         "time_share": [
           0.0,
-          0.3710067418349319,
-          0.6289932581650681
+          0.3743710795215825,
+          0.6256289204784176
         ],
-        "total_ns": 5003323.429844405,
+        "total_ns": 5031659.494929677,
         "regret_vs_oracle": 0.0
       },
       {
         "policy": "E oracle",
         "cost": {
-          "exec": 4251793.694813092,
+          "exec": 4275279.86375187,
           "growth": 0.0,
-          "memory": 751529.7350313121,
+          "memory": 756379.6311778069,
           "migration": 0.0
         },
         "migrations": 0,
         "bytes_migrated": 0,
-        "peak_bytes": 14537721,
-        "mean_bytes": 2219174.65996077,
+        "peak_bytes": 14612851,
+        "mean_bytes": 2233495.80539262,
         "time_share": [
           0.0,
-          0.3710067418349319,
-          0.6289932581650681
+          0.3743710795215825,
+          0.6256289204784176
         ],
-        "total_ns": 5003323.429844405,
+        "total_ns": 5031659.494929677,
         "regret_vs_oracle": 0.0
       }
     ],
     "best_fixed": "B always-segmented",
-    "oracle_gain_over_best_fixed": 0.07220675796652498,
-    "heterogeneity_gain": 0.07220675796652498,
+    "oracle_gain_over_best_fixed": 0.07128573283251236,
+    "heterogeneity_gain": 0.07128573283251236,
     "switching_gain": 0.0,
     "contexts_switching": 0.0
   },
@@ -1072,8 +1072,8 @@
       {
         "policy": "A always-contiguous",
         "cost": {
-          "exec": 15946300.156515567,
-          "growth": 1577131.1801202148,
+          "exec": 16175576.31951214,
+          "growth": 1561411.7151401192,
           "memory": 84910.37084569431,
           "migration": 0.0
         },
@@ -1086,14 +1086,14 @@
           0.0,
           0.0
         ],
-        "total_ns": 17608341.707481477,
-        "regret_vs_oracle": 2.2681200000743256
+        "total_ns": 17821898.405497953,
+        "regret_vs_oracle": 2.304601398525475
       },
       {
         "policy": "B always-segmented",
         "cost": {
-          "exec": 5616906.027385401,
-          "growth": 391.091,
+          "exec": 5621943.056636072,
+          "growth": 170.26883999999998,
           "memory": 42786.86786599207,
           "migration": 0.0
         },
@@ -1106,13 +1106,13 @@
           1.0,
           0.0
         ],
-        "total_ns": 5660083.986251392,
-        "regret_vs_oracle": 0.050515374182520716
+        "total_ns": 5664900.193342064,
+        "regret_vs_oracle": 0.05040645364976002
       },
       {
         "policy": "C always-heap",
         "cost": {
-          "exec": 29925510.19808437,
+          "exec": 30259617.088999055,
           "growth": 0.0,
           "memory": 7619.6249064422445,
           "migration": 0.0
@@ -1126,13 +1126,13 @@
           0.0,
           1.0
         ],
-        "total_ns": 29933129.822990812,
-        "regret_vs_oracle": 4.555608919025769
+        "total_ns": 30267236.7139055,
+        "regret_vs_oracle": 4.612261415619885
       },
       {
         "policy": "D static-can-suspend",
         "cost": {
-          "exec": 29925510.19808437,
+          "exec": 30259617.088999055,
           "growth": 0.0,
           "memory": 7619.6249064422445,
           "migration": 0.0
@@ -1146,14 +1146,14 @@
           0.0,
           1.0
         ],
-        "total_ns": 29933129.822990812,
-        "regret_vs_oracle": 4.555608919025769
+        "total_ns": 30267236.7139055,
+        "regret_vs_oracle": 4.612261415619885
       },
       {
         "policy": "F hindsight-static",
         "cost": {
-          "exec": 5339199.18536693,
-          "growth": 8113.661088064313,
+          "exec": 5344423.836758206,
+          "growth": 8032.791206762195,
           "memory": 40598.76850437524,
           "migration": 0.0
         },
@@ -1166,14 +1166,14 @@
           0.9286741567608289,
           0.0666483108290753
         ],
-        "total_ns": 5387911.61495937,
+        "total_ns": 5393055.396469343,
         "regret_vs_oracle": 0.0
       },
       {
         "policy": "E oracle",
         "cost": {
-          "exec": 5339199.18536693,
-          "growth": 8113.661088064313,
+          "exec": 5344423.836758206,
+          "growth": 8032.791206762195,
           "memory": 40598.76850437524,
           "migration": 0.0
         },
@@ -1186,13 +1186,13 @@
           0.9286741567608289,
           0.0666483108290753
         ],
-        "total_ns": 5387911.61495937,
+        "total_ns": 5393055.396469343,
         "regret_vs_oracle": 0.0
       }
     ],
     "best_fixed": "B always-segmented",
-    "oracle_gain_over_best_fixed": 0.04808627786321571,
-    "heterogeneity_gain": 0.04808627786321571,
+    "oracle_gain_over_best_fixed": 0.04798757040630977,
+    "heterogeneity_gain": 0.04798757040630977,
     "switching_gain": 0.0,
     "contexts_switching": 0.0
   },
@@ -1205,8 +1205,8 @@
       {
         "policy": "A always-contiguous",
         "cost": {
-          "exec": 2860379.6245000167,
-          "growth": 418267.33808904886,
+          "exec": 2866266.7235000157,
+          "growth": 414098.41488450766,
           "memory": 5243305.146737654,
           "migration": 0.0
         },
@@ -1219,14 +1219,14 @@
           0.0,
           0.0
         ],
-        "total_ns": 8521952.10932672,
-        "regret_vs_oracle": 0.1563293409516606
+        "total_ns": 8523670.285122177,
+        "regret_vs_oracle": 0.1562515820514739
       },
       {
         "policy": "B always-segmented",
         "cost": {
-          "exec": 2589355.8983749915,
-          "growth": 12514.91200000001,
+          "exec": 2589485.233625005,
+          "growth": 5448.602879999987,
           "memory": 5284266.324987991,
           "migration": 0.0
         },
@@ -1239,13 +1239,13 @@
           1.0,
           0.0
         ],
-        "total_ns": 7886137.135362983,
-        "regret_vs_oracle": 0.07005667708559113
+        "total_ns": 7879200.161492996,
+        "regret_vs_oracle": 0.0688280221172257
       },
       {
         "policy": "C always-heap",
         "cost": {
-          "exec": 2729381.0305312485,
+          "exec": 2731362.5977499923,
           "growth": 0.0,
           "memory": 4640462.632242407,
           "migration": 0.0
@@ -1259,13 +1259,13 @@
           0.0,
           1.0
         ],
-        "total_ns": 7369843.662773656,
-        "regret_vs_oracle": 1.684609926141559e-6
+        "total_ns": 7371825.229992399,
+        "regret_vs_oracle": 1.6776415589717243e-6
       },
       {
         "policy": "D static-can-suspend",
         "cost": {
-          "exec": 2729381.0305312485,
+          "exec": 2731362.5977499923,
           "growth": 0.0,
           "memory": 4640462.632242407,
           "migration": 0.0
@@ -1279,13 +1279,13 @@
           0.0,
           1.0
         ],
-        "total_ns": 7369843.662773656,
-        "regret_vs_oracle": 1.684609926141559e-6
+        "total_ns": 7371825.229992399,
+        "regret_vs_oracle": 1.6776415589717243e-6
       },
       {
         "policy": "F hindsight-static",
         "cost": {
-          "exec": 2729368.6103749988,
+          "exec": 2731350.2256249925,
           "growth": 0.0,
           "memory": 4640462.637107783,
           "migration": 0.0
@@ -1299,13 +1299,13 @@
           2.004329655797126e-9,
           0.9999999979956703
         ],
-        "total_ns": 7369831.247482782,
+        "total_ns": 7371812.8627327755,
         "regret_vs_oracle": 0.0
       },
       {
         "policy": "E oracle",
         "cost": {
-          "exec": 2729368.6103749988,
+          "exec": 2731350.2256249925,
           "growth": 0.0,
           "memory": 4640462.637107783,
           "migration": 0.0
@@ -1319,13 +1319,13 @@
           2.004329655797126e-9,
           0.9999999979956703
         ],
-        "total_ns": 7369831.247482782,
+        "total_ns": 7371812.8627327755,
         "regret_vs_oracle": 0.0
       }
     ],
     "best_fixed": "C always-heap",
-    "oracle_gain_over_best_fixed": 1.6846070882357367e-6,
-    "heterogeneity_gain": 1.6846070882357367e-6,
+    "oracle_gain_over_best_fixed": 1.6776387444952455e-6,
+    "heterogeneity_gain": 1.6776387444952455e-6,
     "switching_gain": 0.0,
     "contexts_switching": 0.0
   },
@@ -1338,8 +1338,8 @@
       {
         "policy": "A always-contiguous",
         "cost": {
-          "exec": 271123.22850050114,
-          "growth": 1045.7051485478878,
+          "exec": 271146.1355005012,
+          "growth": 1035.2824737131596,
           "memory": 2.355269631993846,
           "migration": 0.0
         },
@@ -1352,14 +1352,14 @@
           0.0,
           0.0
         ],
-        "total_ns": 272171.28891868104,
+        "total_ns": 272183.7732438464,
         "regret_vs_oracle": 0.0
       },
       {
         "policy": "B always-segmented",
         "cost": {
-          "exec": 290065.2863748525,
-          "growth": 4888637.500006866,
+          "exec": 290065.78962485254,
+          "growth": 2128360.5000003995,
           "memory": 2.3220350880055762,
           "migration": 0.0
         },
@@ -1372,13 +1372,13 @@
           1.0,
           0.0
         ],
-        "total_ns": 5178705.108416806,
-        "regret_vs_oracle": 18.027374742543444
+        "total_ns": 2418428.6116603403,
+        "regret_vs_oracle": 7.885278438306083
       },
       {
         "policy": "C always-heap",
         "cost": {
-          "exec": 1960654.8180127398,
+          "exec": 1983419.6248738002,
           "growth": 0.0,
           "memory": 1.3185386132527286,
           "migration": 0.0
@@ -1392,13 +1392,13 @@
           0.0,
           1.0
         ],
-        "total_ns": 1960656.136551353,
-        "regret_vs_oracle": 6.203758134595729
+        "total_ns": 1983420.9434124134,
+        "regret_vs_oracle": 6.287065352112262
       },
       {
         "policy": "D static-can-suspend",
         "cost": {
-          "exec": 1960654.8180127398,
+          "exec": 1983419.6248738002,
           "growth": 0.0,
           "memory": 1.3185386132527286,
           "migration": 0.0
@@ -1412,14 +1412,14 @@
           0.0,
           1.0
         ],
-        "total_ns": 1960656.136551353,
-        "regret_vs_oracle": 6.203758134595729
+        "total_ns": 1983420.9434124134,
+        "regret_vs_oracle": 6.287065352112262
       },
       {
         "policy": "F hindsight-static",
         "cost": {
-          "exec": 271123.22850050114,
-          "growth": 1045.7051485478878,
+          "exec": 271146.1355005012,
+          "growth": 1035.2824737131596,
           "memory": 2.355269631993846,
           "migration": 0.0
         },
@@ -1432,14 +1432,14 @@
           0.0,
           0.0
         ],
-        "total_ns": 272171.28891868104,
+        "total_ns": 272183.7732438464,
         "regret_vs_oracle": 0.0
       },
       {
         "policy": "E oracle",
         "cost": {
-          "exec": 271123.22850050114,
-          "growth": 1045.7051485478878,
+          "exec": 271146.1355005012,
+          "growth": 1035.2824737131596,
           "memory": 2.355269631993846,
           "migration": 0.0
         },
@@ -1452,7 +1452,7 @@
           0.0,
           0.0
         ],
-        "total_ns": 272171.28891868104,
+        "total_ns": 272183.7732438464,
         "regret_vs_oracle": 0.0
       }
     ],

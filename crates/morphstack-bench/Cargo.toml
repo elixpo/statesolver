@@ -9,6 +9,7 @@ repository.workspace = true
 homepage.workspace = true
 
 [dependencies]
+corosensei.workspace = true
 memmap2.workspace = true
 morphstack-cost.workspace = true
 serde.workspace = true

@@ -166,6 +166,44 @@ fn alloc_free_ns(size: usize, depth: usize) -> (Spread, Spread) {
     (med(alloc), med(free))
 }
 
+#[inline(never)]
+fn leaf(x: u64) -> u64 {
+    black_box(x)
+        .wrapping_mul(0x9e37_79b9_7f4a_7c15)
+        .rotate_left(7)
+}
+
+/// Segment-boundary crossing: run a call on a different, already-allocated
+/// stack segment and return, compared with the same call on the current
+/// stack. One `on_stack` round trip crosses a boundary twice (call and
+/// return), so the per-crossing cost is half the difference. `corosensei`
+/// also installs panic propagation, so this slightly overestimates a lean
+/// hand-written morestack path.
+fn boundary_ns() -> std::io::Result<Spread> {
+    const ITERS: u64 = 200_000;
+    let mut segment = corosensei::stack::DefaultStack::new(64 << 10)?;
+    let base = repeat(9, || {
+        let start = Instant::now();
+        let mut acc = 0u64;
+        for i in 0..ITERS {
+            acc ^= leaf(i);
+        }
+        black_box(acc);
+        per_op(start, ITERS)
+    });
+    let crossed = repeat(9, || {
+        let start = Instant::now();
+        let mut acc = 0u64;
+        for i in 0..ITERS {
+            acc ^= corosensei::on_stack(&mut segment, || leaf(i));
+        }
+        black_box(acc);
+        per_op(start, ITERS)
+    });
+    let half = |c: f64| ((c - base.0) / 2.0).max(0.0);
+    Ok((half(crossed.0), half(crossed.1), half(crossed.2)))
+}
+
 fn machine() -> String {
     let cpu = std::fs::read_to_string("/proc/cpuinfo")
         .ok()
@@ -187,6 +225,7 @@ fn machine() -> String {
 ///
 /// # Errors
 /// Fails if anonymous memory cannot be mapped.
+#[allow(clippy::too_many_lines)]
 pub fn calibrate(base: &CostModel) -> std::io::Result<Calibration> {
     let mut p = base.clone();
     let mut m = Vec::new();
@@ -246,6 +285,12 @@ pub fn calibrate(base: &CostModel) -> std::io::Result<Calibration> {
         "malloc of a 128-byte frame, LIFO at depth 32 (warm allocator)",
     );
     p.heap.free_ns = put("heap.free_ns", hf, "ns", "free of a 128-byte frame, LIFO");
+    p.segmented.boundary_ns = put(
+        "segmented.boundary_ns",
+        boundary_ns()?,
+        "ns",
+        "half the extra cost of corosensei::on_stack onto a cached segment vs. a plain call (upper estimate)",
+    );
     // Migration copy cost tracks memory bandwidth.
     for row in &mut p.migration {
         for cell in row.iter_mut() {
@@ -266,7 +311,7 @@ pub fn calibrate(base: &CostModel) -> std::io::Result<Calibration> {
                 "needs the Stage 4 runtime",
             ),
             (
-                "contiguous.check_ns, segmented.check_ns, segmented.boundary_ns",
+                "contiguous.check_ns, segmented.check_ns",
                 "needs the Stage 4 runtime",
             ),
             (

@@ -21,7 +21,8 @@ Findings go in [DISCOVERIES.md](DISCOVERIES.md), not here.
 - [x] Sensitivity sweep over memory price and migration-cost scale (`morphstack sweep`, [results/stage2/sweep.md](results/stage2/sweep.md))
 - [x] `morphstack calibrate`: measured first touch, copy, mmap/munmap, and segment/frame malloc/free ([results/profiles](results/profiles))
 - [x] Memory price documented as an economic regime, not a measurement ([docs/simulator.md](docs/simulator.md))
-- [ ] **Measure `segmented.boundary_ns`**, the decisive parameter for the switching claim (threshold about 100–120 ns). Needs a minimal segment-switch microbenchmark in `morphstack-rt`, pulled forward from Stage 4.
+- [x] Measured `segmented.boundary_ns` = 0.93 ns with safe `corosensei::on_stack` (threshold was about 100–120 ns), so the switching gain is 0% on every workload
+- [ ] **Research-direction decision**: pivot the headline to online per-context selection, or test per-activation granularity and real traces first (see DISCOVERIES)
 - [ ] Per-context timeline output (`sim --timeline`) for paper graph 5
 - [ ] Calibrate on aarch64 macOS as a second machine
 - [ ] Real traces: a Tokio HTTP server under load, Go `runtime/trace`, and possibly Python asyncio, each with a converter
