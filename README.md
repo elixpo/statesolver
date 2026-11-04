@@ -12,25 +12,29 @@ statesolver why rax --event 91800
 statesolver explain-crash
 ```
 
-The research question: can deterministic replay reconstruct **allocation-epoch-aware causal slices on demand**, without the cost of recording a complete dynamic dependence graph during the original run? And does treating `address + lifetime` as object identity improve root-cause localization for temporal memory bugs?
+**The paper** asks whether LLM debugging agents find the true root cause of real memory bugs more accurately, and make fewer claims the trace doesn't support, when they answer through these allocation-lifetime-aware causal queries instead of raw replay-debugger access.
 
-- Research direction (locked): [docs/research-direction.md](docs/research-direction.md)
+StateSolver uses [rr](https://rr-project.org) for recording and replay, and serves its queries over the CLI and as MCP tools for agents such as [Crumb](https://github.com/elixpo/crumb.elixpo).
+
+- **Locked direction (project + paper): [docs/DIRECTION.md](docs/DIRECTION.md)**
+- Design brief: [docs/research-direction.md](docs/research-direction.md)
+- Literature review: [docs/slr/](docs/slr/verdict.md)
 - Stage tracking: [tracking-issues/](tracking-issues/), mirrored as GitHub issues #1–#5
 - Open work: [TODO.md](TODO.md)
 - What we have learned: [DISCOVERIES.md](DISCOVERIES.md)
 - Earlier direction: [MorphStack (archived)](docs/archive/morphstack/README.md)
 
-**Status:** Stage 1 (#1): foundations, literature review, and trace format.
+**Status:** Stage 1 is done. Stage 2 (#2) is in progress: the rr backend.
 
 ## Layout
 
 | Crate | Purpose | Stage |
 |---|---|---|
 | `statesolver-trace` | `.ss` trace format: events, allocation epochs, checkpoints index | 1 |
-| `statesolver-record` | ptrace recorder, syscall and allocation capture (may use `unsafe`) | 2 |
-| `statesolver-replay` | checkpoints, deterministic replay, historical state | 3 |
-| `statesolver-analysis` | temporal object graph, query-driven provenance, crash explainer | 4 |
-| `statesolver-harness` | tool API, sessions, evidence model, MCP server, Crumb agent | 5 |
+| `statesolver-record` | reference ptrace recorder; now a **test fixture** (rr is the backend) | 2 |
+| `statesolver-replay` | rr replay driver (gdb remote protocol), historical state, on-demand epochs | 2 |
+| `statesolver-analysis` | temporal heap, causal query engine, crash explainer, evidence IDs | 3 |
+| `statesolver-harness` | MCP server, sessions, evidence model, Crumb agent, study arms | 4 |
 | `statesolver-cli` | the `statesolver` binary | all |
 
 `bug-corpus/` holds the controlled C/C++ programs used for evaluation.

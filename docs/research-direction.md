@@ -1,3 +1,5 @@
+> **Note (2026-11-04):** this brief is the design reference. What we build first, the paper's claim, and the evaluation are locked in [DIRECTION.md](DIRECTION.md), which takes precedence where the two differ (rr backend; on-demand epochs; agent-study paper).
+
 # StateSolver — Research Direction & Project Brief
 
 ## 1. Problem

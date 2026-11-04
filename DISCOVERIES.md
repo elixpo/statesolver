@@ -6,6 +6,25 @@ MorphStack's log is archived at [docs/archive/morphstack/DISCOVERIES.md](docs/ar
 
 ---
 
+## 2026-11-04: Direction locked: rr-backed crash explainer, and an agent study as the paper
+
+- **Scrutiny:** [docs/slr/agent-paper-scrutiny.md](docs/slr/agent-paper-scrutiny.md). Closest threats:
+  - **DebugHarness** (arXiv 2604.03610): an agent with GDB, pwndbg, and rr over MCP on SEC-bench. It measures patch success only; there is no root-cause accuracy and no measured hallucination.
+  - **Undo AI** and the open-source **rr MCP servers**: agent plus rr is a commodity.
+  - **Veritas** and **KernelDiag**: grounding and evidence-graph framing.
+  - **T2L-ARVO**: the same localization metric, without a debugger.
+- **Remaining gap:** a controlled study of root-cause accuracy *and* trace-verified claim support, isolating the effect of allocation-lifetime-aware causal queries against raw replay access.
+- **Decision:** [docs/DIRECTION.md](docs/DIRECTION.md).
+  - The project comes first: an open crash explainer on rr, with an MCP server and the Crumb agent.
+  - The paper is the agent study, with arms A0–A5, SEC-bench primary, and a pilot gate on about 20 bugs.
+  - arXiv cs.SE, cross-listed to cs.AI.
+- **Known risk:** a null result. The pilot exists to find that out cheaply, and a null result would be reported honestly.
+
+## 2026-11-04: rr drives cleanly over the gdb remote protocol; the address-only answer is visibly incomplete
+
+- **Finding:** `rr replay -s PORT` plus `gdb target extended-remote` runs to the SIGSEGV in bug 001. `watch -l *(long*)h` followed by `reverse-continue` stops at `__memcpy_avx_unaligned_erms`, called from `main.c:46`; the value changed from `greet` to `0x4141…`.
+- **Implication:** the last writer by address is the stale `memcpy`, and that is all an address-only tool reports. The missing fact is that `memcpy`'s destination pointer came from `s.cached_user`, which points into the freed `User` at epoch 1, while the address now belongs to `Handler` at epoch 2. That missing fact is exactly what A4 adds over A1 and A5.
+
 ## 2026-11-04: Breakpoint-based allocation tracking costs about 50 µs per allocation, far behind rr
 
 - **Finding:** `benchmarks/alloc-churn.c` with 100k malloc/free pairs runs natively in under 0.01 s, takes **4.98 s** under `statesolver record`, and takes **0.04 s** under `rr record`. Compute-bound code (`benchmarks/compute.c`) records at native speed (0.09 s either way), so the cost is the 4–5 ptrace stops per allocator call, not syscalls.

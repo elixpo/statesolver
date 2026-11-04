@@ -16,31 +16,36 @@ Findings go in [DISCOVERIES.md](DISCOVERIES.md).
 - [ ] Human re-run of the review in Google Scholar and ACM DL, with forward citations of Undangle, FreeWill, Arnold, DrDebug (moved to #5, paper stage)
 - [ ] Pernosco reuse check: run corpus bug 001 under Pernosco if access is possible
 
-## Stage 2: Recording backend (#2)
+## Stage 2: rr backend (#2). In progress
 
-- [ ] Decide early between our own recorder and rr as the substrate. Recommended: our own single-threaded recorder, with rr as a correctness oracle
-- [ ] Environment for rr cross-checks: `apt install rr`, `kernel.perf_event_paranoid ≤ 1` (currently 4), P-core pinning (hybrid i5-13450HX)
-- [x] ptrace recorder: syscalls with output models, maps, allocation epochs via libc breakpoints, markers, signals, register deltas; corpus integration tests
-- [ ] Allocations before the entry point (loader and constructors); custom allocators (pools and arenas), with a hook API or a symbol list
-- [ ] Trap `rdtsc`/`rdrand` (`PR_SET_TSC`, CPUID faulting) for replay determinism
-- [ ] Threads (`clone`) and child processes: refuse clearly until they are supported
-- [ ] Recording overhead on the corpus (target < 20×)
+- [x] Reference ptrace recorder (now a fixture): syscall models, vDSO patching, TSC trapping, refusal of threads and forks, corpus tests
+- [x] Overhead measured: about 50 µs per allocation against rr at 0.04 s per 100k, so rr becomes the backend
+- [x] rr feasibility: bug 001 records and replays; reverse-continue with a watchpoint finds the stale writer
+- [ ] `statesolver record` as an rr wrapper (PMU and `perf_event_paranoid` checks, `--stdin`)
+- [ ] Replay driver over the gdb remote serial protocol (continue and reverse-continue, step, breakpoints, watchpoints, registers and memory, `when`)
+- [ ] Map rr positions to event IDs
+- [ ] On-demand allocation epochs from one replay pass, cached; cross-checked against the fixture recorder
+- [ ] Historical state: regs, memory, maps, stack at an event
+- [ ] CI runner with PMU access (GitHub-hosted runners may lack a vPMU)
 
-## Stage 3: Checkpoints and replay (#3)
+## Stage 3: Causal query engine (#3)
 
-- [ ] Checkpoints, deterministic runner, rewind, and historical state and history queries; replay-fidelity tests
+- [ ] Instruction semantics (`iced-x86`); producer search through reverse execution, watchpoints, and stepping
+- [ ] Temporal object graph; address-only switch (arm A5)
+- [ ] `why`, `origin`, `history`, `lifetime`, `explain-crash`; evidence IDs stored with replay positions
+- [ ] Ground-truth assertions from `ROOT_CAUSE.md`; grow the corpus with real reuse bugs
 
-## Stage 4: Causal reconstruction and evaluation (#4)
+## Stage 4: Study instrument and pilot (#4)
 
-- [ ] Instruction semantics (`iced-x86`), on-demand producer search, temporal object graph, `why`/`origin`/`lifetime`/`explain-crash`
-- [ ] Baselines: address-only (same engine), Undangle-style forward pointer labels, eager index/DDG (break-even on number of queries)
-- [ ] Real reuse bugs: FreeWill reallocation cases, SEC-bench, Magma; report the share of the corpus where reuse changes the slice
-- [ ] Metrics: wrong-edge rate, slice size, distance to root cause, localization accuracy; ablations
+- [ ] `statesolver mcp`; FACT/INFERENCE/HYPOTHESIS model; claim-citation protocol in every arm
+- [ ] Arms A0–A5 with matched budgets; Crumb runner plus one other harness; 3 or more models
+- [ ] SEC-bench, ARVO/T2L-ARVO, and VulnLoc loaders; rr recording of each; annotation tooling with κ
+- [ ] Arm-blind claim checker
+- [ ] **Pilot**: about 20 SEC-bench bugs, A1 against A4 (plus A5), with a go/adapt decision
 
-## Stage 5: Harness, UI, release, paper (#5)
+## Stage 5: Full study, release, paper (#5)
 
-- [ ] Tool API, sessions, FACT/INFERENCE/HYPOTHESIS evidence model, JSON-RPC, then MCP
-- [ ] Crumb agent via `crumb-harness` (feature-gated), and a Crumb marketplace package
-- [ ] Visual UI over the analysis API
-- [ ] Release pipeline; elixpo.com and research.elixpo.com listings
-- [ ] Paper last: Scholar and ACM DL re-run, artifact, arXiv (needs an endorsement)
+- [ ] Full runs, strata, cost and Pareto analysis
+- [ ] Release: Debian package, install script, Crumb marketplace package; elixpo.com and research.elixpo.com listings
+- [ ] Optional visual UI
+- [ ] Paper and artifact; arXiv cs.SE (cross-listed cs.AI, cs.CR); the maintainer's Scholar check (papers citing WATCHER, Ravel, DebugHarness)
