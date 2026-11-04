@@ -80,7 +80,7 @@ Paper:
 Online-learning research studies decisions made without future knowledge and compares them against changing best policies.
 
 Example:
-- *Non-stationary Online Learning with Memory and Non-stochastic Control*
+- *Non-stationary Online Learning with Memory and Non-stochastic Control* (Zhao, Wang, Zhou; AISTATS 2022)
 - https://proceedings.mlr.press/v151/zhao22a.html
 
 **Implication:** dynamic regret plus switching cost gives MorphStack a rigorous mathematical framework.
