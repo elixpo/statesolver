@@ -23,6 +23,20 @@ enum Command {
     /// Inspect, check, and convert activation-event traces.
     #[command(subcommand)]
     Trace(TraceCmd),
+    /// Generate a synthetic workload trace.
+    Gen {
+        /// Workload name, or `list` to show all.
+        workload: String,
+        /// Output file (`.msb` for binary, otherwise JSONL).
+        #[arg(short, long)]
+        out: Option<PathBuf>,
+        /// Seed.
+        #[arg(long, default_value_t = 1)]
+        seed: u64,
+        /// Size multiplier (contexts, iterations).
+        #[arg(long, default_value_t = 1.0)]
+        scale: f64,
+    },
 }
 
 #[derive(Subcommand)]
@@ -73,6 +87,12 @@ fn main() -> ExitCode {
 
 fn run(cli: Cli) -> Result<ExitCode> {
     match cli.command {
+        Command::Gen {
+            workload,
+            out,
+            seed,
+            scale,
+        } => gen_trace(&workload, out.as_deref(), seed, scale),
         Command::Trace(TraceCmd::Validate { path, max_errors }) => validate(&path, max_errors),
         Command::Trace(TraceCmd::Stats { path, json }) => stats(&path, json),
         Command::Trace(TraceCmd::Convert { input, output, to }) => {
@@ -181,5 +201,34 @@ fn convert(input: &Path, output: &Path, format: Format) -> Result<ExitCode> {
     }
     writer.finish()?;
     println!("wrote {n} events to {} ({format:?})", output.display());
+    Ok(ExitCode::SUCCESS)
+}
+
+fn gen_trace(name: &str, out: Option<&Path>, seed: u64, scale: f64) -> Result<ExitCode> {
+    use morphstack_workloads::{Spec, Workload};
+    if name == "list" {
+        for w in Workload::ALL {
+            println!("{}", w.name());
+        }
+        return Ok(ExitCode::SUCCESS);
+    }
+    let workload = Workload::from_name(name)
+        .with_context(|| format!("unknown workload {name:?}; try `morphstack gen list`"))?;
+    anyhow::ensure!(scale > 0.0 && scale.is_finite(), "scale must be positive");
+    let out = out.context("--out is required")?;
+    let spec = Spec {
+        workload,
+        seed,
+        scale,
+    };
+    let mut writer = morphstack_trace::create(out, &morphstack_workloads::header(&spec))
+        .with_context(|| format!("creating {}", out.display()))?;
+    let mut n = 0u64;
+    morphstack_workloads::generate(&spec, &mut |e| {
+        n += 1;
+        writer.write(&e)
+    })?;
+    writer.finish()?;
+    println!("wrote {n} events to {}", out.display());
     Ok(ExitCode::SUCCESS)
 }

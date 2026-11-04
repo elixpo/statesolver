@@ -310,6 +310,7 @@ dependencies = [
  "anyhow",
  "clap",
  "morphstack-trace",
+ "morphstack-workloads",
  "serde_json",
 ]
 
@@ -342,6 +343,9 @@ dependencies = [
 [[package]]
 name = "morphstack-workloads"
 version = "0.1.0"
+dependencies = [
+ "morphstack-trace",
+]
 
 [[package]]
 name = "num-traits"
