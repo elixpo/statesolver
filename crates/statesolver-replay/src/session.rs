@@ -339,8 +339,28 @@ impl Session {
     /// # Errors
     /// Fails if the position is never reached.
     pub fn goto(&mut self, pos: RrPos) -> Result<()> {
-        self.seek_event(pos.event)?;
-        if self.position()? == pos {
+        let debug = std::env::var_os("STATESOLVER_DEBUG").is_some();
+        // `vRun` to event N can land *after* positions that `when` reports as
+        // being in event N (it lands at the start of the next event when N
+        // has completed). Step the seek back until it lands at or before the
+        // target's tick count.
+        let mut event = pos.event;
+        let mut start = loop {
+            self.seek_event(event)?;
+            let here = self.position()?;
+            if here.ticks <= pos.ticks || event == 0 {
+                break here;
+            }
+            event = event.saturating_sub(1);
+        };
+        if start.ticks > pos.ticks {
+            self.seek_event(0)?;
+            start = self.position()?;
+        }
+        if debug {
+            eprintln!("goto {pos:?}: after seek {start:?}");
+        }
+        if start == pos {
             return Ok(());
         }
         self.set_breakpoint(pos.pc)?;
@@ -348,6 +368,13 @@ impl Session {
             match self.cont()? {
                 Stop::Breakpoint => {
                     let ticks = self.ticks()?;
+                    if debug {
+                        eprintln!(
+                            "  bp hit: ticks {ticks} rip {:#x} rsp {:#x}",
+                            self.reg(Reg::Rip)?,
+                            self.reg(Reg::Rsp)?
+                        );
+                    }
                     if ticks == pos.ticks
                         && self.reg(Reg::Rip)? == pos.pc
                         && self.reg(Reg::Rsp)? == pos.sp

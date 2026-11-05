@@ -259,7 +259,7 @@ pub fn explain_crash(s: &mut Session, index: &[Event], address_only: bool) -> Re
             pointer_chain: None,
         });
     };
-    let value_chain = provenance::trace(s, index, start, crash, 12, 4096)?;
+    let value_chain = provenance::trace(s, index, start, crash, 32, 4096)?;
     // The last write to memory on the value's chain is the corrupting write.
     let write = value_chain
         .hops
@@ -349,7 +349,7 @@ pub fn explain_crash(s: &mut Session, index: &[Event], address_only: bool) -> Re
         });
     };
     let pointer_chain =
-        provenance::trace(s, index, Carrier::Reg { reg: areg }, write.pos, 16, 4096)?;
+        provenance::trace(s, index, Carrier::Reg { reg: areg }, write.pos, 32, 4096)?;
     let (classification, summary) = match (&pointer_chain.origin, owner) {
         (
             Origin::Allocation {
@@ -531,7 +531,7 @@ fn explain_double_free(
         ),
         Some(pos),
     );
-    let chain = provenance::trace(s, index, Carrier::Reg { reg: Reg::Rdi }, pos, 16, 4096)?;
+    let chain = provenance::trace(s, index, Carrier::Reg { reg: Reg::Rdi }, pos, 32, 4096)?;
     let i = b.infer(
         format!("Double free of Allocation #{}: the pointer passed to the second free traces back to that same allocation, so two owners released it.", alloc.0),
         [Some(f_first.clone()), Some(f_second.clone()), f_alloc.clone()].into_iter().flatten().collect(),
@@ -624,7 +624,7 @@ fn explain_sanitizer(
         return Ok(x);
     }
     // The bad address arrives as the hook's first argument.
-    let pointer_chain = provenance::trace(s, index, Carrier::Reg { reg: Reg::Rdi }, pos, 16, 4096)?;
+    let pointer_chain = provenance::trace(s, index, Carrier::Reg { reg: Reg::Rdi }, pos, 32, 4096)?;
     let (cover, below) = covering(index, addr, pos);
     let live_owner = owner_at(index, addr, pos);
     let mut classification = "invalid memory access".to_string();

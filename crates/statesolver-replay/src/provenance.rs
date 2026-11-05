@@ -139,11 +139,22 @@ fn next_carrier(
             .filter(|r| !matches!(r, Reg::Rsp | Reg::Rbp | Reg::Rip))
             .map(|reg| Carrier::Reg { reg }));
     }
+    let rmw = insn.reads.iter().any(|r| r == reg.name()) && !insn.text.starts_with("xor");
     if let Some((addr, len)) = mem_operand(s, ins)? {
+        // `add rdi, [mem]`: pointer arithmetic with two sources. Follow the
+        // one that holds a pointer-like value, preferring the register.
+        if rmw {
+            let reg_val = s.reg(reg)?;
+            let mem_val = s.read_u64(addr).unwrap_or(0);
+            let pointer_like = |v: u64| v >= 0x1_0000 && v < 0x8000_0000_0000;
+            if pointer_like(reg_val) || !pointer_like(mem_val) {
+                return Ok(Some(Carrier::Reg { reg }));
+            }
+        }
         return Ok(Some(Carrier::Mem { addr, len }));
     }
     // Read-modify-write of the tracked register (add, sub, and, inc, ...).
-    if insn.reads.iter().any(|r| r == reg.name()) && !insn.text.starts_with("xor") {
+    if rmw {
         return Ok(Some(Carrier::Reg { reg }));
     }
     Ok(insn

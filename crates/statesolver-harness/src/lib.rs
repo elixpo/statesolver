@@ -206,7 +206,7 @@ impl Server {
                 let index = self.index.clone();
                 let s = self.session()?;
                 let mut chain =
-                    provenance::trace(s, &index, start, at, 16, 4096).map_err(|e| e.to_string())?;
+                    provenance::trace(s, &index, start, at, 32, 4096).map_err(|e| e.to_string())?;
                 if address_only && let Origin::Allocation { pos, .. } = chain.origin {
                     chain.origin = Origin::Unknown {
                         reason: format!(

@@ -738,7 +738,7 @@ fn why(
         (None, None) => anyhow::bail!("give --reg or --addr"),
     };
     let mut s = statesolver_replay::Session::start(Some(trace)).context("starting rr replay")?;
-    let chain = statesolver_replay::provenance::trace(&mut s, &events, start, at, 16, 4096)?;
+    let chain = statesolver_replay::provenance::trace(&mut s, &events, start, at, 32, 4096)?;
     if json {
         println!("{}", serde_json::to_string_pretty(&chain)?);
         return Ok(ExitCode::SUCCESS);

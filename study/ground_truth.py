@@ -102,7 +102,11 @@ def main() -> None:
     for iid in sys.argv[1:]:
         d = db[iid]
         root = fix_lines(d["patch"])
-        label = {"instance_id": iid, "class": bug_class(d.get("sanitizer_report") or ""),
+        # The class follows what the agents will see: our own recording's
+        # sanitizer report when it exists, else SEC-bench's report.
+        rec = REPO / "study/bugs" / iid / "record.log"
+        report = rec.read_text(errors="replace") if rec.exists() else (d.get("sanitizer_report") or "")
+        label = {"instance_id": iid, "class": bug_class(report),
                  "root": root, "chain": [], "crash": None, "source": "fix-commit"}
         (out_dir / f"{iid}.json").write_text(json.dumps(label, indent=2) + "\n")
         files = sorted({f for f, _ in root})
