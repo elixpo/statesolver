@@ -113,3 +113,9 @@ We add our own root-cause annotation layer (guideline, two annotators, κ, relea
   - **Pipeline:** one benchmark bug at a time: pull, build, `rr record`, `rr pack`, delete the image. Disk stays at about 10–20 GB; batches run serially and overnight.
   - **Benchmark:** about 40–60 real bugs, chosen from SEC-bench and T2L-ARVO cases in small and medium projects that build in 6 GB RAM, instead of about 300. The pilot gate (about 20 bugs) is unchanged. The size is stated as a limitation.
   - **Models:** 1 for the pilot and 2–3 for the paper (at least one open-weight), with Pollinations to be evaluated as a low-cost provider.
+- 2026-11-05: **single annotator** (the maintainer is the sole builder). Inter-annotator κ is replaced by:
+  1. **Fix-commit ground truth** as the primary, objective localization measure (did the agent point into the lines the fix changes?);
+  2. the maintainer's semantic root-cause labels as a secondary measure, written and frozen **before** any agent run;
+  3. a blinded re-annotation of a random 25% subset after a delay, with **intra-rater agreement** reported.
+
+  Single-annotator labelling is stated as a threat to validity.

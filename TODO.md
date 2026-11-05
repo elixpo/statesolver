@@ -48,7 +48,8 @@ Findings go in [DISCOVERIES.md](DISCOVERIES.md).
 
 - [x] Disk: 92 GB free after cleaning regenerable build outputs; laptop-scale plan adopted (DIRECTION.md, Changes, 2026-11-05)
 - [x] Models: Pollinations `nova-fast` and `qwen-coder` (open-weight), tool calling verified; the pilot costs under 1 Pollen ([docs/study/ENVIRONMENT.md](docs/study/ENVIRONMENT.md))
-- [ ] **Maintainer:** a second annotator for root-cause labels
+- [x] Annotation plan: single annotator (the maintainer). Fix-commit ground truth is primary, semantic labels are frozen before the runs, and a blinded 25% re-annotation gives intra-rater agreement (DIRECTION.md, Changes)
+- [ ] Annotation tool: show a bug (source plus fix diff) and record root-cause lines, class, and notes to `study/labels/*.json`; a blinded re-annotation mode
 - [ ] One-bug-at-a-time benchmark pipeline: pull, build, `rr record` (pinned), `rr pack`, delete the image; resumable, with a manifest of recorded bugs
 - [ ] Benchmark selection: SEC-bench and T2L-ARVO bugs whose projects build in 6 GB RAM (40–60 bugs; 20 for the pilot)
 - [x] `statesolver mcp TRACE [--address-only]`: MCP over stdio. Tools: trace_summary, events, explain_crash, why, last_writer, state, plus allocations and lifetime (arm A4 only). Every result is stamped `Q<n>`, with evidence ids `Q<n>.F<k>`; ground-truth `ss_mark` labels are hidden; arm A5 output is tested to contain no allocation or epoch information
