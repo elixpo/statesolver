@@ -139,14 +139,31 @@ fn next_carrier(
             .filter(|r| !matches!(r, Reg::Rsp | Reg::Rbp | Reg::Rip))
             .map(|reg| Carrier::Reg { reg }));
     }
-    let rmw = insn.reads.iter().any(|r| r == reg.name()) && !insn.text.starts_with("xor");
+    // Read-modify-write arithmetic on the tracked register keeps the
+    // pointer (`add rdi, 8`, `add rdi, [mem]`). A `mov` that merely uses the
+    // register as an address (`mov rax, [rax]`) is a load, not arithmetic.
+    let arithmetic = matches!(
+        ins.mnemonic(),
+        iced_x86::Mnemonic::Add
+            | iced_x86::Mnemonic::Sub
+            | iced_x86::Mnemonic::Adc
+            | iced_x86::Mnemonic::Sbb
+            | iced_x86::Mnemonic::Or
+            | iced_x86::Mnemonic::And
+            | iced_x86::Mnemonic::Inc
+            | iced_x86::Mnemonic::Dec
+            | iced_x86::Mnemonic::Neg
+            | iced_x86::Mnemonic::Imul
+            | iced_x86::Mnemonic::Xadd
+    );
+    let rmw = arithmetic && insn.reads.iter().any(|r| r == reg.name());
     if let Some((addr, len)) = mem_operand(s, ins)? {
         // `add rdi, [mem]`: pointer arithmetic with two sources. Follow the
         // one that holds a pointer-like value, preferring the register.
         if rmw {
             let reg_val = s.reg(reg)?;
             let mem_val = s.read_u64(addr).unwrap_or(0);
-            let pointer_like = |v: u64| v >= 0x1_0000 && v < 0x8000_0000_0000;
+            let pointer_like = |v: u64| (0x1_0000..0x8000_0000_0000).contains(&v);
             if pointer_like(reg_val) || !pointer_like(mem_val) {
                 return Ok(Some(Carrier::Reg { reg }));
             }
