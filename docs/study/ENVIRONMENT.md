@@ -4,7 +4,20 @@ Status as of 2026-11-05: **laptop-scale plan adopted** (see DIRECTION.md, Change
 
 Original assessment (2026-11-04): Everything below is needed for the **agent runs**. Building the MCP server and the study harness does not need any of it.
 
-## 1. Model access (maintainer)
+## 1. Model access: **resolved 2026-11-05 (Pollinations)**
+
+- Provider: Pollinations, OpenAI-compatible: `POST https://gen.pollinations.ai/v1/chat/completions`, header `Authorization: Bearer $POLLINATIONS_KEY` (an `sk_` key). The `pk_` app key is identification only; Pollinations rejects it for generation since 2026-11-01.
+- Keys: plaintext in `.env.local` (git-ignored); the SOPS-encrypted `.env` is committed, following the Crumb pattern. Never print or log keys.
+- Models, verified in the live catalog and with a tool-calling test on 2026-11-05:
+
+  | Alias | Model | Pollen per 1M tokens (in / out) | Tools |
+  |---|---|---|---|
+  | `nova-fast` | `amazon/nova-micro-v1` | 0.035 / 0.14 | yes |
+  | `qwen-coder` | `qwen/qwen3-coder-30b-a3b-instruct` (open-weight) | 0.074 / 0.30 | yes |
+
+  Both are `paid_only`, so they draw on paid Pollen. The balance was 86.5 Pollen (42.1 paid). At about 50k tokens per agent run, the whole pilot costs **under 1 Pollen**.
+
+### Original requirements (2026-11-04)
 
 The design ([DIRECTION.md](../DIRECTION.md) §2) needs **3 or more models, at least one open-weight**. The pilot uses one.
 

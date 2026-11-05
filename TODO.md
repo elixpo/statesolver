@@ -47,7 +47,8 @@ Findings go in [DISCOVERIES.md](DISCOVERIES.md).
 ## Stage 4: Study instrument and pilot (#4)
 
 - [x] Disk: 92 GB free after cleaning regenerable build outputs; laptop-scale plan adopted (DIRECTION.md, Changes, 2026-11-05)
-- [ ] **Maintainer:** model provider and budget (Pollinations?), and a second annotator. See [docs/study/ENVIRONMENT.md](docs/study/ENVIRONMENT.md)
+- [x] Models: Pollinations `nova-fast` and `qwen-coder` (open-weight), tool calling verified; the pilot costs under 1 Pollen ([docs/study/ENVIRONMENT.md](docs/study/ENVIRONMENT.md))
+- [ ] **Maintainer:** a second annotator for root-cause labels
 - [ ] One-bug-at-a-time benchmark pipeline: pull, build, `rr record` (pinned), `rr pack`, delete the image; resumable, with a manifest of recorded bugs
 - [ ] Benchmark selection: SEC-bench and T2L-ARVO bugs whose projects build in 6 GB RAM (40–60 bugs; 20 for the pilot)
 - [x] `statesolver mcp TRACE [--address-only]`: MCP over stdio. Tools: trace_summary, events, explain_crash, why, last_writer, state, plus allocations and lifetime (arm A4 only). Every result is stamped `Q<n>`, with evidence ids `Q<n>.F<k>`; ground-truth `ss_mark` labels are hidden; arm A5 output is tested to contain no allocation or epoch information
