@@ -9,6 +9,7 @@
 //! `statesolver-record`, including glibc `free` re-entry deduplication.
 
 use std::collections::HashMap;
+use std::path::Path;
 
 use statesolver_record::symbols;
 use statesolver_trace::{
@@ -298,12 +299,25 @@ impl Indexer<'_> {
 }
 
 fn exec_file(s: &mut Session) -> Result<String> {
-    // The replayed process's own mapping of its executable is authoritative.
+    // rr knows the recorded executable. In a packed trace (recorded elsewhere,
+    // for example in a container) the replay maps rr's copy of it,
+    // `mmap_pack_<n>_<name>`, so match by file name among the mappings.
+    let recorded = s.exec_file()?;
+    let name = recorded.rsplit('/').next().unwrap_or(&recorded).to_string();
     let maps = symbols::parse_maps(&s.maps()?);
-    maps.iter()
-        .filter_map(|m| m.path.clone())
-        .find(|p| p.starts_with('/') && !p.starts_with("/usr/lib/rr/") && !p.contains(".so"))
-        .ok_or_else(|| Error::Protocol("cannot find the executable mapping".into()))
+    let paths: Vec<String> = maps.iter().filter_map(|m| m.path.clone()).collect();
+    paths
+        .iter()
+        .find(|p| **p == recorded)
+        .or_else(|| {
+            paths.iter().find(|p| {
+                let base = p.rsplit('/').next().unwrap_or(p);
+                base.starts_with("mmap_") && base.ends_with(&format!("_{name}"))
+            })
+        })
+        .filter(|p| Path::new(p).exists())
+        .cloned()
+        .ok_or_else(|| Error::Protocol(format!("cannot find a mapping of the executable {recorded}")))
 }
 
 /// Replay the whole recording once and derive its allocation index.
@@ -314,7 +328,7 @@ fn exec_file(s: &mut Session) -> Result<String> {
 pub fn build(s: &mut Session) -> Result<(Header, Vec<Event>, Summary)> {
     // Run to the program's entry point so its image is mapped.
     let exe = exec_file(s)?;
-    let data = std::fs::read(&exe)?;
+    let data = std::fs::read(&exe).map_err(|e| Error::Protocol(format!("reading executable {exe}: {e}")))?;
     let file = object::File::parse(&*data).map_err(|e| Error::Protocol(e.to_string()))?;
     let maps = symbols::parse_maps(&s.maps()?);
     let base = symbols::images(&maps)

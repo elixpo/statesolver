@@ -370,22 +370,35 @@ impl Session {
         result
     }
 
+    /// The executable path recorded by rr (`qXfer:exec-file:read`). For a
+    /// packed or moved trace this is the original path, which may not exist
+    /// on this machine; see [`crate::index`] for mapping it to the packed copy.
+    ///
+    /// # Errors
+    /// Fails on protocol errors.
+    pub fn exec_file(&mut self) -> Result<String> {
+        let reply = self.conn.request("qXfer:exec-file:read::0,fff")?;
+        match reply.as_bytes().first() {
+            Some(b'l' | b'm') => Ok(reply[1..].to_string()),
+            _ => Err(Error::Protocol(format!("exec-file: {reply}"))),
+        }
+    }
+
     /// `/proc/<pid>/maps` of the replayed process (rr replays by executing
     /// the recorded program as its child, so the mappings match the recording).
     ///
     /// # Errors
     /// Fails if the replay process cannot be found.
     pub fn maps(&self) -> Result<String> {
-        let children = std::fs::read_to_string(format!(
-            "/proc/{}/task/{}/children",
-            self.rr.id(),
-            self.rr.id()
-        ))?;
+        let rr = self.rr.id();
+        let path = format!("/proc/{rr}/task/{rr}/children");
+        let children = std::fs::read_to_string(&path).map_err(|e| Error::Protocol(format!("{path}: {e}")))?;
         let pid = children
             .split_whitespace()
             .next()
             .ok_or_else(|| Error::Protocol("rr has no replay process".into()))?;
-        Ok(std::fs::read_to_string(format!("/proc/{pid}/maps"))?)
+        let maps = format!("/proc/{pid}/maps");
+        std::fs::read_to_string(&maps).map_err(|e| Error::Protocol(format!("{maps}: {e}")))
     }
 
     /// Step over a software breakpoint at the current `rip` and re-arm it.
