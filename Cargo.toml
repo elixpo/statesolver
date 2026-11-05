@@ -42,6 +42,7 @@ statesolver-trace = { path = "crates/statesolver-trace" }
 statesolver-analysis = { path = "crates/statesolver-analysis" }
 statesolver-record = { path = "crates/statesolver-record" }
 statesolver-replay = { path = "crates/statesolver-replay" }
+statesolver-harness = { path = "crates/statesolver-harness" }
 
 [profile.release]
 lto = "thin"

@@ -264,17 +264,6 @@ pub fn explain_crash(s: &mut Session, index: &[Event], address_only: bool) -> Re
         ),
         Some(write.pos),
     );
-    let owner = owner_at(index, waddr, write.pos);
-    let f_owner = b.fact(
-        owner.map_or_else(
-            || format!("At that moment {waddr:#x} belonged to no live heap allocation"),
-            |o| format!(
-                "At that moment {waddr:#x} belonged to Allocation #{} (epoch {}, {} bytes at {:#x}, offset {})",
-                o.alloc.0, o.epoch.0, o.size, o.addr, waddr - o.addr
-            ),
-        ),
-        Some(write.pos),
-    );
     if let Origin::Syscall { pos } = value_chain.origin {
         b.fact(
             format!(
@@ -286,8 +275,16 @@ pub fn explain_crash(s: &mut Session, index: &[Event], address_only: bool) -> Re
     }
 
     if address_only {
+        // Arm A5 has no allocation-lifetime knowledge: no owner facts, and
+        // an allocation origin is reported only as a call result.
+        let mut value_chain = value_chain;
+        if let Origin::Allocation { pos, .. } = value_chain.origin {
+            value_chain.origin = Origin::Unknown {
+                reason: format!("value returned by a call at rr {}:{}", pos.event, pos.ticks),
+            };
+        }
         let summary = format!(
-            "Crash ({f_crash}) on a value last written by `{}` ({f_write}) into {waddr:#x} ({f_owner}).",
+            "Crash ({f_crash}) on a value last written by `{}` ({f_write}) into {waddr:#x}.",
             write.insn.text
         );
         return Ok(Explanation {
@@ -299,6 +296,17 @@ pub fn explain_crash(s: &mut Session, index: &[Event], address_only: bool) -> Re
         });
     }
 
+    let owner = owner_at(index, waddr, write.pos);
+    let f_owner = b.fact(
+        owner.map_or_else(
+            || format!("At that moment {waddr:#x} belonged to no live heap allocation"),
+            |o| format!(
+                "At that moment {waddr:#x} belonged to Allocation #{} (epoch {}, {} bytes at {:#x}, offset {})",
+                o.alloc.0, o.epoch.0, o.size, o.addr, waddr - o.addr
+            ),
+        ),
+        Some(write.pos),
+    );
     // Lifetime-aware step: where did the writer's address pointer come from?
     let Some(areg) = write
         .insn

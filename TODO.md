@@ -50,7 +50,9 @@ Findings go in [DISCOVERIES.md](DISCOVERIES.md).
 - [ ] **Maintainer:** model provider and budget (Pollinations?), and a second annotator. See [docs/study/ENVIRONMENT.md](docs/study/ENVIRONMENT.md)
 - [ ] One-bug-at-a-time benchmark pipeline: pull, build, `rr record` (pinned), `rr pack`, delete the image; resumable, with a manifest of recorded bugs
 - [ ] Benchmark selection: SEC-bench and T2L-ARVO bugs whose projects build in 6 GB RAM (40–60 bugs; 20 for the pilot)
-- [ ] `statesolver mcp`; FACT/INFERENCE/HYPOTHESIS model; claim-citation protocol in every arm
+- [x] `statesolver mcp TRACE [--address-only]`: MCP over stdio. Tools: trace_summary, events, explain_crash, why, last_writer, state, plus allocations and lifetime (arm A4 only). Every result is stamped `Q<n>`, with evidence ids `Q<n>.F<k>`; ground-truth `ss_mark` labels are hidden; arm A5 output is tested to contain no allocation or epoch information
+- [ ] HYPOTHESIS tier and the claim-citation protocol for arms that are not StateSolver (A0–A3)
+- [ ] Rare flake: `Session::start` occasionally fails in the rr test suite (1 in about 10 runs); investigate (port race or rr startup)
 - [ ] Arms A0–A5 with matched budgets; Crumb runner plus one other harness; 3 or more models
 - [ ] SEC-bench, ARVO/T2L-ARVO, and VulnLoc loaders; rr recording of each; annotation tooling with κ
 - [ ] Arm-blind claim checker

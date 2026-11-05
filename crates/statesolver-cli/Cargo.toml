@@ -22,6 +22,7 @@ statesolver-trace.workspace = true
 [target.'cfg(target_os = "linux")'.dependencies]
 statesolver-record.workspace = true
 statesolver-replay.workspace = true
+statesolver-harness.workspace = true
 
 [lints]
 workspace = true

@@ -566,6 +566,7 @@ dependencies = [
  "clap",
  "serde_json",
  "statesolver-analysis",
+ "statesolver-harness",
  "statesolver-record",
  "statesolver-replay",
  "statesolver-trace",
@@ -574,6 +575,12 @@ dependencies = [
 [[package]]
 name = "statesolver-harness"
 version = "0.1.0"
+dependencies = [
+ "serde_json",
+ "statesolver-analysis",
+ "statesolver-replay",
+ "statesolver-trace",
+]
 
 [[package]]
 name = "statesolver-record"
@@ -593,6 +600,7 @@ dependencies = [
  "iced-x86",
  "object",
  "serde",
+ "serde_json",
  "statesolver-record",
  "statesolver-trace",
  "thiserror",

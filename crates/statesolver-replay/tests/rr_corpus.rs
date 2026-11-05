@@ -386,3 +386,23 @@ fn address_only_mode_misses_the_stale_pointer() {
     );
     assert!(x.pointer_chain.is_none());
 }
+
+/// Arm A5 must not receive any allocation-lifetime information.
+#[test]
+fn address_only_explanations_mention_no_allocations() {
+    for (name, stdin) in [
+        ("001-uaf-reuse", None),
+        ("003-heap-overflow-input", Some("input/overflow.bin")),
+    ] {
+        let Some(x) = explain(name, stdin, true) else {
+            return;
+        };
+        let text = serde_json::to_string(&x).unwrap();
+        for leak in ["Allocation #", "epoch", "\"allocation\""] {
+            assert!(
+                !text.contains(leak),
+                "{name}: A5 output leaks {leak:?}: {text}"
+            );
+        }
+    }
+}

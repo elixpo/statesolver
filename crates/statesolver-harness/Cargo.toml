@@ -1,12 +1,18 @@
 [package]
 name = "statesolver-harness"
-description = "StateSolver tool API, sessions, evidence model, MCP server, and Crumb agent"
+description = "StateSolver tool server for agents (MCP over stdio), evidence ids, and study arms"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
 homepage.workspace = true
+
+[target.'cfg(target_os = "linux")'.dependencies]
+serde_json.workspace = true
+statesolver-analysis.workspace = true
+statesolver-replay.workspace = true
+statesolver-trace.workspace = true
 
 [lints]
 workspace = true

@@ -44,6 +44,15 @@ enum Command {
         #[arg(long)]
         force: bool,
     },
+    /// Serve the trace's queries as MCP tools over stdio (for agents).
+    #[cfg(target_os = "linux")]
+    Mcp {
+        /// rr trace directory.
+        trace: PathBuf,
+        /// Study arm A5: no allocation-lifetime tools or reasoning.
+        #[arg(long)]
+        address_only: bool,
+    },
     /// Where did a value come from? Provenance chain of a register or memory
     /// location at an indexed event, with the allocation it belongs to.
     #[cfg(target_os = "linux")]
@@ -175,6 +184,24 @@ fn run(cli: Cli) -> Result<ExitCode> {
             } else {
                 record_rr(&out, stdin, &command)
             }
+        }
+        #[cfg(target_os = "linux")]
+        Command::Mcp {
+            trace,
+            address_only,
+        } => {
+            let index_path = index(&trace, false)?;
+            let events: Vec<statesolver_trace::Event> =
+                statesolver_trace::open(&index_path)?.collect::<std::result::Result<_, _>>()?;
+            let mut server = statesolver_harness::Server::new(
+                statesolver_harness::Config {
+                    trace,
+                    address_only,
+                },
+                events,
+            );
+            server.serve_stdio()?;
+            Ok(ExitCode::SUCCESS)
         }
         #[cfg(target_os = "linux")]
         Command::Why {
