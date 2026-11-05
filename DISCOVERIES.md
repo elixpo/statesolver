@@ -6,6 +6,17 @@ MorphStack's log is archived at [docs/archive/morphstack/DISCOVERIES.md](docs/ar
 
 ---
 
+## 2026-11-06: Engine-only baseline classifies 19/19 pilot bugs after three replay fixes
+
+**Finding.** `statesolver explain-crash` with no LLM now finishes on every pilot bug: 11 use-after-free, 6 heap-buffer-overflow, 2 double free. All 19 match the frozen labels. The slowest bugs are jq at 39 s and qpdf at 21 s; most take under 10 s.
+**Evidence.** `study/engine_sweep.sh` and `study/engine_score.py`. The previous sweep failed on 8 of 17 bugs. There were three causes:
+(1) `vRun` to event N can land after positions that `when` reports as inside N, so `goto` "overshot". It now seeks back events until the landing point's ticks are at or below the target's. The "rr closed the connection" and "address not mapped" failures were symptoms of the same bug.
+(2) For two-source arithmetic (`add rdi,[mem]`), the provenance walk followed the wrong operand. It now follows the pointer-like one.
+(3) A read-modify-write rule that treated `mov rax,[rax]` as pointer-preserving broke bug 001. Read-modify-write now applies to arithmetic mnemonics only.
+**What it changes.** Class agreement is a sanity floor, not a result: the ASan report already names the class, so arm A0 gets it for free. The study's measure stays root-cause localization against fix lines, plus claim support. The engine is now reliable enough to run the LLM pilot (A0, A1, A4, A5 × 3 seeds).
+
+---
+
 ## 2026-11-06: Pilot recordings complete (20/20); three pre-pilot corrections
 
 - **Recording:** all 20 pilot bugs were recorded under rr in their containers and indexed on the host (17–77 MB per trace, about 800 MB total). Two infrastructure failures along the way:

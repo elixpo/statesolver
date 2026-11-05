@@ -12,7 +12,7 @@ for b in (REPO / "study/pilot.txt").read_text().split():
         got = json.loads((REPO / f"study/results/engine/{b}.json").read_text())["classification"]
     except Exception:
         got = "(no result)"
-    hit = got.startswith(label) or (label == "use-after-free" and got.startswith("use-after-free"))
+    hit = got.replace(" ", "-").startswith(label)
     ok += hit
     print(f"{b:30} label={label:22} engine={got:40} {'ok' if hit else 'MISS'}")
 print(f"\nclass accuracy: {ok}/{total}")

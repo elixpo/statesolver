@@ -61,6 +61,7 @@ Findings go in [DISCOVERIES.md](DISCOVERIES.md).
 - [ ] Crumb integration as a product feature (`statesolver mcp` in Crumb), separate from the study runner
 - [ ] SEC-bench, ARVO/T2L-ARVO, and VulnLoc loaders; rr recording of each; annotation tooling with κ
 - [ ] Arm-blind claim checker
+- [x] Engine-only baseline: `explain-crash` completes on 19/19 pilot bugs with correct class (`study/engine_sweep.sh`, `study/engine_score.py`)
 - [ ] **Pilot**: about 20 SEC-bench bugs, A1 against A4 (plus A5), with a go/adapt decision
 
 ## Stage 5: Full study, release, paper (#5)
