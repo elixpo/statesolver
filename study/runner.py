@@ -50,7 +50,7 @@ Rules:
 - Be efficient: you have a limited number of tool calls.
 - When done, reply with ONLY a JSON object (no prose, no code fence):
 {
-  "bug_class": "use-after-free | heap-buffer-overflow | double-free | null-dereference | other",
+  "bug_class": "use-after-free | heap-buffer-overflow | stack-buffer-overflow | double-free | bad-free | null-dereference | other",
   "root_cause": {"file": "path relative to the source root", "line": 123, "function": "name"},
   "crash_site": {"file": "...", "line": 0, "function": "..."},
   "explanation": "short causal story from root cause to crash",
@@ -59,7 +59,7 @@ Rules:
 
 TASK_PROMPT = """The program `{program}` crashed: {outcome}.
 Its source code is available under the source root (use list_dir/read_file with
-paths relative to it). Find the root cause."""
+paths relative to it). Find the root cause.{report}"""
 
 
 # ----------------------------------------------------------------------------
@@ -113,10 +113,12 @@ def fn(name: str, desc: str, props: dict, required: list[str]) -> dict:
 class Common:
     """Source and symbol tools shared by every arm."""
 
-    def __init__(self, src: Path, exe: Path, load_base: int = 0):
+    def __init__(self, src: Path, exe: Path, load_base: int = 0, strip: list[str] | None = None):
         self.src = src.resolve()
         self.exe = exe
         self.load_base = load_base
+        # Build-time path prefixes to strip so paths are relative to the source root.
+        self.strip = [p.rstrip("/") + "/" for p in (strip or []) if p] + [str(self.src) + "/"]
 
     def tools(self) -> list[dict]:
         return [
@@ -156,7 +158,8 @@ class Common:
             out = subprocess.run(cmd, capture_output=True, text=True, timeout=20).stdout.strip()
             out = re.sub(r":(\d+):\d+$", r":\1", out, flags=re.M)
             # Report paths relative to the source root, whatever the build path was.
-            out = re.sub(r"(?m)^/\S*?/src/", "", out.replace(str(self.src) + "/", ""))
+            for prefix in self.strip:
+                out = out.replace(prefix, "")
             if not out or out.startswith("??") or out.endswith(":0"):
                 return f"{a['addr']}: not in the program's own code (likely a shared library such as libc)"
             return out
@@ -203,6 +206,19 @@ class Mcp:
     def close(self) -> None:
         self.p.stdin.close()
         self.p.wait(timeout=30)
+
+
+class NoTools:
+    """Arm A0: the crash report and the source only."""
+
+    def tools(self) -> list[dict]:
+        return []
+
+    def call(self, name: str, a: dict) -> str | None:
+        return None
+
+    def close(self) -> None:
+        pass
 
 
 class RawGdb:
@@ -295,8 +311,19 @@ def parse_final(text: str) -> dict | None:
 def run(args: argparse.Namespace) -> dict:
     trace = Path(args.trace).resolve()
     program, exe, outcome, load_base = trace_facts(trace)
-    common = Common(Path(args.src), exe, load_base)
-    if args.arm == "A1":
+    common = Common(Path(args.src), exe, load_base, args.strip_prefix)
+    report = ""
+    if args.report:
+        text = Path(args.report).read_text(errors="replace")
+        # Keep the sanitizer report itself, not the surrounding build noise.
+        m = re.search(r"=+\d+=+ERROR:.*?(?:ABORTING|$)", text, re.S)
+        text = (m.group(0) if m else text)[:6000]
+        for prefix in common.strip:
+            text = text.replace(prefix, "")
+        report = "\n\nThe crash report:\n```\n" + text + "\n```"
+    if args.arm == "A0":
+        backend = NoTools()
+    elif args.arm == "A1":
         backend = RawGdb(trace, exe)
     elif args.arm in ("A4", "A5"):
         backend = Mcp(trace, address_only=args.arm == "A5")
@@ -305,7 +332,7 @@ def run(args: argparse.Namespace) -> dict:
     tools = common.tools() + backend.tools()
     key = api_key()
     messages = [{"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": TASK_PROMPT.format(program=Path(program).name, outcome=outcome)}]
+                {"role": "user", "content": TASK_PROMPT.format(program=Path(program).name, outcome=outcome, report=report)}]
     log, usage, t_id, final = [], {"prompt_tokens": 0, "completion_tokens": 0}, 0, None
     started = time.time()
     try:
@@ -360,7 +387,9 @@ def main() -> None:
     p = argparse.ArgumentParser()
     p.add_argument("--trace", required=True)
     p.add_argument("--src", required=True, help="source root shown to the agent")
-    p.add_argument("--arm", required=True, choices=["A1", "A4", "A5"])
+    p.add_argument("--arm", required=True, choices=["A0", "A1", "A4", "A5"])
+    p.add_argument("--report", help="file holding the sanitizer report shown to the agent (every arm)")
+    p.add_argument("--strip-prefix", action="append", default=[], help="build path prefix to strip (repeatable)")
     p.add_argument("--model", default="nova-fast")
     p.add_argument("--seed", type=int, default=1)
     p.add_argument("--temperature", type=float, default=0.2)

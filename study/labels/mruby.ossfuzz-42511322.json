@@ -1,0 +1,53 @@
+{
+  "instance_id": "mruby.ossfuzz-42511322",
+  "class": "use-after-free",
+  "root": [
+    [
+      "src/vm.c",
+      204
+    ],
+    [
+      "src/vm.c",
+      511
+    ],
+    [
+      "src/vm.c",
+      519
+    ],
+    [
+      "src/vm.c",
+      520
+    ],
+    [
+      "src/vm.c",
+      521
+    ],
+    [
+      "src/vm.c",
+      527
+    ],
+    [
+      "src/vm.c",
+      553
+    ],
+    [
+      "src/vm.c",
+      554
+    ],
+    [
+      "src/vm.c",
+      555
+    ],
+    [
+      "src/vm.c",
+      861
+    ],
+    [
+      "src/vm.c",
+      909
+    ]
+  ],
+  "chain": [],
+  "crash": null,
+  "source": "fix-commit"
+}

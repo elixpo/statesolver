@@ -39,6 +39,7 @@ CLASS_ALIASES = {
     "uaf": "use-after-free", "use after free": "use-after-free",
     "heap-overflow": "heap-buffer-overflow", "heap buffer overflow": "heap-buffer-overflow",
     "buffer-overflow": "heap-buffer-overflow", "double free": "double-free",
+    "invalid-free": "bad-free", "bad free": "bad-free", "invalid free": "bad-free",
 }
 
 
@@ -55,8 +56,8 @@ def ground_truth(bug: str) -> dict | None:
     return None
 
 
-def same_loc(rep: dict | None, loc: list) -> bool:
-    if not isinstance(rep, dict):
+def same_loc(rep: dict | None, loc: list | None) -> bool:
+    if not isinstance(rep, dict) or not loc:
         return False
     f, line = loc
     try:
@@ -87,7 +88,7 @@ def score_run(run: dict, gt: dict, src: Path | None = None) -> dict:
         "class_ok": norm_class(final.get("bug_class")) == gt["class"],
         "root_hit": any(same_loc(rc, l) for l in gt["root"]),
         "chain_hit": any(same_loc(rc, l) for l in gt["root"] + gt.get("chain", [])),
-        "said_crash": same_loc(rc, gt["crash"]) and not any(same_loc(rc, l) for l in gt["root"]),
+        "said_crash": same_loc(rc, gt.get("crash")) and not any(same_loc(rc, l) for l in gt["root"]),
         "invented_file": bool(src and isinstance(rc, dict) and rc.get("file")
                               and not (src / str(rc["file"]).lstrip("/")).exists()),
         "claims": len(claims),

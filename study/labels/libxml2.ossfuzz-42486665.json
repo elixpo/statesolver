@@ -1,0 +1,57 @@
+{
+  "instance_id": "libxml2.ossfuzz-42486665",
+  "class": "use-after-free",
+  "root": [
+    [
+      "xinclude.c",
+      1987
+    ],
+    [
+      "xinclude.c",
+      2242
+    ],
+    [
+      "xinclude.c",
+      2258
+    ],
+    [
+      "xinclude.c",
+      2259
+    ],
+    [
+      "xinclude.c",
+      2260
+    ],
+    [
+      "xinclude.c",
+      2261
+    ],
+    [
+      "xinclude.c",
+      2263
+    ],
+    [
+      "xinclude.c",
+      2264
+    ],
+    [
+      "xinclude.c",
+      2265
+    ],
+    [
+      "xinclude.c",
+      2266
+    ],
+    [
+      "xinclude.c",
+      2267
+    ],
+    [
+      "xinclude.c",
+      2268
+    ]
+  ],
+  "chain": [],
+  "crash": null,
+  "source": "fix-commit"
+}

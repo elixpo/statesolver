@@ -6,6 +6,12 @@ MorphStack's log is archived at [docs/archive/morphstack/DISCOVERIES.md](docs/ar
 
 ---
 
+## 2026-11-05: Fix-commit ground truth frozen; ASan-report-only (A0) solves jq exactly, so A0 joins the pilot
+
+- **Ground truth:** `study/ground_truth.py` derives root-cause lines from each developer fix: the vulnerable-file lines the fix deletes or modifies, or the anchor line before a pure insertion. Labels for the 20 pilot bugs are committed in `study/labels/` **before any pilot run**. Fix sizes range from 1 line (8 bugs) to 84 lines (libxml2-42537493), so results must be stratified by fix size.
+- **Signal:** on `jq` (heap overflow), arm **A0, with the ASan report and source only**, named the exact fix line `src/jv.c:638` in 11 calls and 21k tokens. ASan overflow reports already contain the allocation stack, so easy bugs are solvable from the report alone. This is reviewer objection #4 from the scrutiny, showing up immediately.
+- **Implication:** the pilot runs **A0, A1, A4, and A5**. StateSolver's value has to be shown *beyond the ASan report*, and is expected (if anywhere) on bugs where the report's stacks do not reveal the root cause: long free→use chains, reuse, and wrapper allocators. Results get stratified by crash-to-root-cause distance.
+
 ## 2026-11-05: First real CVE explained correctly; ASan support, loop collapse, and three benchmark gotchas
 
 - **Real CVE:** on SEC-bench `jq` CVE-2023-50246 (an ASan build recorded inside its container and replayed on the host), `explain-crash` reports *heap-buffer-overflow: a pointer into live Allocation #5676 (328 bytes) accessed offset 328, 0 bytes past its end*. It traces the pointer back across functions to the allocation. The developer fix changes `digits + 14` to `digits + 15` in the allocation size, which agrees.

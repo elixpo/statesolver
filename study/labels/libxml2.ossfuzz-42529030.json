@@ -1,0 +1,17 @@
+{
+  "instance_id": "libxml2.ossfuzz-42529030",
+  "class": "use-after-free",
+  "root": [
+    [
+      "buf.c",
+      1020
+    ],
+    [
+      "buf.c",
+      1021
+    ]
+  ],
+  "chain": [],
+  "crash": null,
+  "source": "fix-commit"
+}

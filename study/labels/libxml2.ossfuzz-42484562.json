@@ -1,0 +1,17 @@
+{
+  "instance_id": "libxml2.ossfuzz-42484562",
+  "class": "use-after-free",
+  "root": [
+    [
+      "xmlreader.c",
+      280
+    ],
+    [
+      "xmlreader.c",
+      306
+    ]
+  ],
+  "chain": [],
+  "crash": null,
+  "source": "fix-commit"
+}
