@@ -402,6 +402,9 @@ fn stats(path: &Path) -> Result<ExitCode> {
         h.version
     );
     println!("program      {} {:?}", h.program.path, h.program.argv);
+    if let Some(b) = h.program.load_base {
+        println!("load base    {b:#x}");
+    }
     println!("recorder     {}", h.recorder);
     println!("events       {n}");
     for (k, c) in &kinds {

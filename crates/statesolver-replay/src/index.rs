@@ -30,6 +30,53 @@ enum Kind {
     Mark,
     Return,
     Entry,
+    /// `__asan_report_{load,store}<size>`: the bad address is in `rdi`
+    /// (`_n` variants pass the size in `rsi`; size 0 here means "read rsi").
+    AsanReport {
+        store: bool,
+        size: u64,
+    },
+    /// `__asan::ReportGenericError(pc, bp, sp, addr, is_write, size, exp, fatal)`.
+    AsanGeneric,
+    /// `__asan::ReportDoubleFree(addr, stack)`.
+    AsanDoubleFree,
+    /// `__asan::ReportFreeNotMalloced(addr, stack)`.
+    AsanBadFree,
+}
+
+/// ASan report hooks, by symbol name.
+fn asan_hooks() -> Vec<(String, Kind)> {
+    let mut v = Vec::new();
+    for (access, store) in [("load", false), ("store", true)] {
+        for (suffix, size) in [
+            ("1", 1),
+            ("2", 2),
+            ("4", 4),
+            ("8", 8),
+            ("16", 16),
+            ("_n", 0),
+        ] {
+            for prefix in ["__asan_report_", "__asan_report_exp_"] {
+                v.push((
+                    format!("{prefix}{access}{suffix}"),
+                    Kind::AsanReport { store, size },
+                ));
+            }
+        }
+    }
+    v.push((
+        "_ZN6__asan18ReportGenericErrorEmmmmbmjb".into(),
+        Kind::AsanGeneric,
+    ));
+    v.push((
+        "_ZN6__asan16ReportDoubleFreeEmPN11__sanitizer18BufferedStackTraceE".into(),
+        Kind::AsanDoubleFree,
+    ));
+    v.push((
+        "_ZN6__asan21ReportFreeNotMallocedEmPN11__sanitizer18BufferedStackTraceE".into(),
+        Kind::AsanBadFree,
+    ));
+    v
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -77,6 +124,7 @@ struct Indexer<'a> {
     last_at: HashMap<u64, (AllocId, Epoch)>,
     epochs: HashMap<u64, u32>,
     summary: Summary,
+    sanitizer_seen: bool,
 }
 
 impl Indexer<'_> {
@@ -150,10 +198,12 @@ impl Indexer<'_> {
     fn at_entry(&mut self, exe: &str) -> Result<()> {
         let maps = symbols::parse_maps(&self.s.maps()?);
         let mut found: HashMap<String, (u8, u64)> = HashMap::new();
+        let hooks = asan_hooks();
         let names: Vec<&str> = ALLOCATOR
             .iter()
             .map(|(n, _)| *n)
             .chain(["ss_mark"])
+            .chain(hooks.iter().map(|(n, _)| n.as_str()))
             .collect();
         for image in symbols::images(&maps) {
             if image.path.starts_with("/usr/lib/rr/") {
@@ -187,13 +237,50 @@ impl Indexer<'_> {
         if let Some(&(_, a)) = found.get("ss_mark") {
             self.bp(a, Kind::Mark)?;
         }
+        for (name, kind) in hooks {
+            if let Some(&(_, a)) = found.get(&name) {
+                self.bp(a, kind)?;
+            }
+        }
         Ok(())
     }
 
+    #[allow(clippy::too_many_lines)]
     fn on_hit(&mut self, addr: u64, kind: Kind, exe: &str) -> Result<()> {
         self.summary.stops += 1;
         let rsp = self.s.reg(Reg::Rsp)?;
         match kind {
+            Kind::AsanReport { .. }
+            | Kind::AsanGeneric
+            | Kind::AsanDoubleFree
+            | Kind::AsanBadFree => {
+                // Only the first report: ASan's own report path calls further hooks.
+                if !self.sanitizer_seen {
+                    self.sanitizer_seen = true;
+                    let caller = self.s.read_u64(rsp)?;
+                    let (rdi, rsi) = (self.s.reg(Reg::Rdi)?, self.s.reg(Reg::Rsi)?);
+                    let (kind, addr, size, pc) = match kind {
+                        Kind::AsanReport { store, size } => {
+                            let size = if size == 0 { rsi } else { size };
+                            (if store { "store" } else { "load" }, rdi, size, caller)
+                        }
+                        Kind::AsanGeneric => {
+                            let addr = self.s.reg(Reg::Rcx)?;
+                            let is_write = self.s.reg(Reg::R8)? & 1 == 1;
+                            let size = self.s.reg(Reg::R9)?;
+                            (if is_write { "store" } else { "load" }, addr, size, rdi)
+                        }
+                        Kind::AsanDoubleFree => ("double-free", rdi, 0, caller),
+                        _ => ("bad-free", rdi, 0, caller),
+                    };
+                    self.emit(EventKind::Sanitizer {
+                        kind: kind.into(),
+                        addr,
+                        size,
+                        pc,
+                    })?;
+                }
+            }
             Kind::Entry => self.at_entry(exe)?,
             Kind::Mark => {
                 let ptr = self.s.reg(Reg::Rdi)?;
@@ -317,7 +404,11 @@ fn exec_file(s: &mut Session) -> Result<String> {
         })
         .filter(|p| Path::new(p).exists())
         .cloned()
-        .ok_or_else(|| Error::Protocol(format!("cannot find a mapping of the executable {recorded}")))
+        .ok_or_else(|| {
+            Error::Protocol(format!(
+                "cannot find a mapping of the executable {recorded}"
+            ))
+        })
 }
 
 /// Replay the whole recording once and derive its allocation index.
@@ -328,7 +419,8 @@ fn exec_file(s: &mut Session) -> Result<String> {
 pub fn build(s: &mut Session) -> Result<(Header, Vec<Event>, Summary)> {
     // Run to the program's entry point so its image is mapped.
     let exe = exec_file(s)?;
-    let data = std::fs::read(&exe).map_err(|e| Error::Protocol(format!("reading executable {exe}: {e}")))?;
+    let data = std::fs::read(&exe)
+        .map_err(|e| Error::Protocol(format!("reading executable {exe}: {e}")))?;
     let file = object::File::parse(&*data).map_err(|e| Error::Protocol(e.to_string()))?;
     let maps = symbols::parse_maps(&s.maps()?);
     let base = symbols::images(&maps)
@@ -356,6 +448,7 @@ pub fn build(s: &mut Session) -> Result<(Header, Vec<Event>, Summary)> {
         last_at: HashMap::new(),
         epochs: HashMap::new(),
         summary: Summary::default(),
+        sanitizer_seen: false,
     };
     ix.bp(entry, Kind::Entry)?;
     let mut pending_signal: Option<(u8, u64)> = None;
@@ -430,6 +523,7 @@ pub fn build(s: &mut Session) -> Result<(Header, Vec<Event>, Summary)> {
                 path: exe.clone(),
                 argv: vec![exe],
                 sha256: None,
+                load_base: Some(base),
             },
         )
     };

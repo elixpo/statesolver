@@ -90,6 +90,8 @@ INNER = r"""
 set -u
 cd {work_dir}
 export SANITIZER={sanitizer}
+# Line tables for source-level localization (SEC-bench builds ship without them).
+export CFLAGS="${{CFLAGS:-}} -gline-tables-only" CXXFLAGS="${{CXXFLAGS:-}} -gline-tables-only"
 ( secb build ) > /out/build.log 2>&1 || {{ echo BUILD_FAILED; exit 3; }}
 cd {cwd}
 ( timeout 120 bash -c {cmd_q} ) > /out/repro-native.log 2>&1

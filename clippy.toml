@@ -1,1 +1,1 @@
-doc-valid-idents = ["StateSolver", "MorphStack", ".."]
+doc-valid-idents = ["StateSolver", "MorphStack", "AddressSanitizer", "ASan", "SEC-bench", ".."]

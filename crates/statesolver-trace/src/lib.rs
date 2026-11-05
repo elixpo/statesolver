@@ -146,6 +146,7 @@ impl TraceReader {
                     path: String::new(),
                     argv: Vec::new(),
                     sha256: None,
+                    load_base: None,
                 },
             ),
             format,

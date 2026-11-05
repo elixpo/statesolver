@@ -289,7 +289,7 @@ pub fn trace(
             }
             Carrier::Mem { addr, len } => {
                 let aligned = addr & !u64::from(len.max(1) - 1);
-                let Some(w) = queries::last_writer(s, aligned, len, pos)? else {
+                let Some(mut w) = queries::last_writer(s, aligned, len, pos)? else {
                     return Ok(Chain {
                         hops,
                         origin: Origin::Unknown {
@@ -297,6 +297,38 @@ pub fn trace(
                         },
                     });
                 };
+                // Loop collapse: if this location is rewritten by an instruction
+                // already on the chain (a loop counter or cursor, `p = p + 1`),
+                // skip every write by the loop's instructions back to the write
+                // that started it.
+                let loop_pcs: Vec<u64> = hops.iter().map(|h| h.pos.pc).collect();
+                // A cursor step writes "old value plus a small delta" (c++, p += 8):
+                // the value derives from the location itself, so skip it too.
+                let is_step = |w: &queries::MemWrite| {
+                    let word = |b: &[u8]| {
+                        let mut v = [0u8; 8];
+                        v[..b.len().min(8)].copy_from_slice(&b[..b.len().min(8)]);
+                        i64::from_le_bytes(v)
+                    };
+                    let d = word(&w.after).wrapping_sub(word(&w.before));
+                    d != 0 && d.abs() <= 4096
+                };
+                if loop_pcs.contains(&w.pos.pc) || is_step(&w) {
+                    let mut skipped = 0u32;
+                    while (loop_pcs.contains(&w.pos.pc) || is_step(&w)) && skipped < 100_000 {
+                        match queries::last_writer(s, aligned, len, w.pos)? {
+                            Some(prev) => w = prev,
+                            None => break,
+                        }
+                        skipped += 1;
+                    }
+                    if let Some(last) = hops.last_mut() {
+                        last.insn.text = format!(
+                            "{}   [skipped {skipped} earlier loop or cursor-step writes]",
+                            last.insn.text
+                        );
+                    }
+                }
                 s.goto(w.pos)?;
                 let ins = decode(s, w.pos.pc)?;
                 if w.insn.text.starts_with("syscall") {

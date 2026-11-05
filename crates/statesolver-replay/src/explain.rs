@@ -85,6 +85,15 @@ fn key(p: RrPos) -> (u64, u64) {
     (p.event, p.ticks)
 }
 
+fn alloc_caller(index: &[Event], alloc: AllocId) -> Option<u64> {
+    index.iter().find_map(|e| match e.kind {
+        EventKind::Alloc {
+            alloc: a, caller, ..
+        } if a == alloc => Some(caller),
+        _ => None,
+    })
+}
+
 fn alloc_size(index: &[Event], alloc: AllocId) -> u64 {
     index
         .iter()
@@ -185,6 +194,21 @@ pub fn explain_crash(s: &mut Session, index: &[Event], address_only: bool) -> Re
         facts: 0,
         infs: 0,
     };
+    // ASan builds stop at the bad access instead of crashing.
+    if let Some((kind, addr, size, pc, pos)) = index.iter().find_map(|e| match (&e.kind, e.rr) {
+        (
+            EventKind::Sanitizer {
+                kind,
+                addr,
+                size,
+                pc,
+            },
+            Some(p),
+        ) => Some((kind.clone(), *addr, *size, *pc, p)),
+        _ => None,
+    }) {
+        return explain_sanitizer(s, index, &mut b, &kind, addr, size, pc, pos, address_only);
+    }
     let crash = index.iter().rev().find_map(|e| match (&e.kind, e.rr) {
         (
             EventKind::Signal {
@@ -522,4 +546,186 @@ fn explain_double_free(
         value_chain: None,
         pointer_chain: Some(chain),
     }))
+}
+
+/// The allocation whose range covers `addr` most recently before `pos`, live
+/// or freed, plus the allocation whose end is closest below `addr` (for
+/// out-of-bounds accesses that land in a redzone).
+fn covering(index: &[Event], addr: u64, pos: RrPos) -> (Option<Owner>, Option<Owner>) {
+    let mut cover = None;
+    let mut below: Option<Owner> = None;
+    for e in index {
+        let Some(p) = e.rr else { continue };
+        if key(p) > key(pos) {
+            break;
+        }
+        if let EventKind::Alloc {
+            alloc,
+            addr: a,
+            size,
+            epoch,
+            ..
+        } = e.kind
+        {
+            let o = Owner {
+                alloc,
+                epoch,
+                addr: a,
+                size,
+            };
+            if addr >= a && addr < a + size.max(1) {
+                cover = Some(o);
+            } else if a + size <= addr && below.is_none_or(|b| a + size > b.addr + b.size) {
+                below = Some(o);
+            }
+        }
+    }
+    (cover, below)
+}
+
+/// Explain an AddressSanitizer stop: the access did not happen, ASan caught
+/// it. The lifetime rule decides the class from where the pointer came from
+/// and what owned the address.
+#[allow(clippy::too_many_arguments, clippy::too_many_lines)]
+fn explain_sanitizer(
+    s: &mut Session,
+    index: &[Event],
+    b: &mut Book,
+    kind: &str,
+    addr: u64,
+    size: u64,
+    pc: u64,
+    pos: RrPos,
+    address_only: bool,
+) -> Result<Explanation> {
+    let access = match kind {
+        "store" => format!("{size}-byte write"),
+        "load" => format!("{size}-byte read"),
+        other => other.to_string(),
+    };
+    let f_stop = b.fact(
+        format!("AddressSanitizer stopped a {access} to {addr:#x} at code address {pc:#x} (the access did not happen)"),
+        Some(pos),
+    );
+    if address_only {
+        return Ok(Explanation {
+            classification: format!("invalid memory access ({kind}, address-only analysis)"),
+            summary: format!(
+                "The program attempted a {access} to {addr:#x} at {pc:#x} ({f_stop})."
+            ),
+            evidence: std::mem::take(&mut b.evidence),
+            value_chain: None,
+            pointer_chain: None,
+        });
+    }
+    if matches!(kind, "double-free" | "bad-free")
+        && let Some(x) = explain_double_free(s, index, b, pos)?
+    {
+        return Ok(x);
+    }
+    // The bad address arrives as the hook's first argument.
+    let pointer_chain = provenance::trace(s, index, Carrier::Reg { reg: Reg::Rdi }, pos, 16, 4096)?;
+    let (cover, below) = covering(index, addr, pos);
+    let live_owner = owner_at(index, addr, pos);
+    let mut classification = "invalid memory access".to_string();
+    let mut parts = vec![format!("ASan stopped the access ({f_stop}).")];
+    match (&pointer_chain.origin, cover) {
+        (
+            Origin::Allocation {
+                alloc,
+                epoch,
+                addr: base,
+                pos: apos,
+            },
+            _,
+        ) => {
+            let call_site = alloc_caller(index, *alloc).map_or_else(String::new, |c| {
+                format!(" by the allocation call returning to {c:#x}")
+            });
+            let f_origin = b.fact(
+                format!("The accessed pointer derives from Allocation #{} (epoch {}) created at {}{call_site}", alloc.0, epoch.0, ev_id(index, *apos)),
+                Some(*apos),
+            );
+            let osize = alloc_size(index, *alloc);
+            let freed = freed_before(index, *alloc, pos);
+            if let Some(f) = freed {
+                let f_free = b.fact(
+                    format!(
+                        "Allocation #{} was freed at E{} before the access",
+                        alloc.0, f.id.0
+                    ),
+                    f.rr,
+                );
+                let reuse = live_owner.filter(|o| o.alloc != *alloc);
+                let i = b.infer(
+                    match reuse {
+                        Some(o) => format!(
+                            "Use-after-free with address reuse: the pointer belongs to freed Allocation #{} epoch {}, but {addr:#x} now belongs to Allocation #{} epoch {}.",
+                            alloc.0, epoch.0, o.alloc.0, o.epoch.0
+                        ),
+                        None => format!("Use-after-free: the pointer belongs to Allocation #{} epoch {}, already freed.", alloc.0, epoch.0),
+                    },
+                    vec![f_stop.clone(), f_origin.clone(), f_free.clone()],
+                );
+                classification = if reuse.is_some() {
+                    "use-after-free with address reuse".into()
+                } else {
+                    "use-after-free".into()
+                };
+                parts.push(format!("The pointer derives from Allocation #{} ({f_origin}), freed earlier ({f_free}). {i}", alloc.0));
+            } else if addr >= *base + osize || addr < *base {
+                let past = addr.saturating_sub(*base + osize);
+                let i = b.infer(
+                    format!(
+                        "Heap buffer overflow: a pointer into live Allocation #{} ({osize} bytes at {base:#x}) accessed offset {}, {past} bytes past its end.",
+                        alloc.0,
+                        addr.wrapping_sub(*base)
+                    ),
+                    vec![f_stop.clone(), f_origin.clone()],
+                );
+                classification = "heap-buffer-overflow".into();
+                parts.push(format!("The pointer derives from live Allocation #{} ({f_origin}) but points outside it. {i}", alloc.0));
+            } else {
+                parts.push(format!(
+                    "The pointer derives from Allocation #{} ({f_origin}) and points inside it.",
+                    alloc.0
+                ));
+            }
+        }
+        (_, Some(c)) if freed_before(index, c.alloc, pos).is_some() => {
+            let f = b.fact(format!("{addr:#x} lies in Allocation #{} (epoch {}), which was freed before the access", c.alloc.0, c.epoch.0), Some(pos));
+            classification = "use-after-free".into();
+            parts.push(format!("The address is inside freed memory ({f}); the pointer's origin could not be traced ({}).", origin_text(&pointer_chain.origin)));
+        }
+        (_, None) if below.is_some() => {
+            let o = below.expect("checked");
+            let f = b.fact(
+                format!(
+                    "{addr:#x} is {} bytes past the end of Allocation #{} ({} bytes at {:#x})",
+                    addr - (o.addr + o.size),
+                    o.alloc.0,
+                    o.size,
+                    o.addr
+                ),
+                Some(pos),
+            );
+            classification = "heap-buffer-overflow".into();
+            parts.push(format!("The address lies just past an allocation ({f}); the pointer's origin could not be traced ({}).", origin_text(&pointer_chain.origin)));
+        }
+        _ => parts.push(format!(
+            "The pointer's origin: {}.",
+            origin_text(&pointer_chain.origin)
+        )),
+    }
+    Ok(Explanation {
+        classification,
+        summary: parts.join(" "),
+        evidence: std::mem::take(&mut b.evidence),
+        value_chain: None,
+        pointer_chain: Some(pointer_chain),
+    })
+}
+
+fn origin_text(o: &Origin) -> String {
+    serde_json::to_string(o).unwrap_or_else(|_| format!("{o:?}"))
 }

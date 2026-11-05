@@ -9,6 +9,7 @@ repository.workspace = true
 homepage.workspace = true
 
 [target.'cfg(target_os = "linux")'.dependencies]
+serde_json.workspace = true
 object.workspace = true
 iced-x86.workspace = true
 serde.workspace = true

@@ -37,6 +37,11 @@ pub struct Program {
     /// SHA-256 of the executable, hex.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub sha256: Option<String>,
+    /// Load base of the executable (lowest mapped address of its image),
+    /// for mapping runtime addresses of position-independent executables
+    /// back to file offsets (`addr2line`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub load_base: Option<u64>,
 }
 
 /// Trace header. Written once, before any event.
@@ -355,6 +360,19 @@ pub enum EventKind {
         /// Registers written by the instruction.
         values: Vec<(Reg, u64)>,
     },
+    /// A sanitizer (`AddressSanitizer`) caught a memory error at this point,
+    /// before the bad access happened. `ASan` builds report and exit instead of
+    /// crashing, so this is the failure to explain.
+    Sanitizer {
+        /// `load`, `store`, `double-free`, `bad-free`, or `generic`.
+        kind: String,
+        /// The bad address.
+        addr: u64,
+        /// Access size in bytes (0 when not applicable).
+        size: u64,
+        /// Return address into the instrumented code (the access site).
+        pc: u64,
+    },
     /// Ground-truth or user marker (`ss_mark("label")` in the bug corpus).
     Mark {
         /// Label.
@@ -389,6 +407,7 @@ impl EventKind {
             Self::Free { .. } => "free",
             Self::Signal { .. } => "signal",
             Self::Nondet { .. } => "nondet",
+            Self::Sanitizer { .. } => "sanitizer",
             Self::Mark { .. } => "mark",
             Self::Exit { .. } => "exit",
         }

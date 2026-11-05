@@ -13,6 +13,7 @@ fn header() -> Header {
             path: "./t".into(),
             argv: vec!["./t".into()],
             sha256: None,
+            load_base: None,
         },
     )
 }

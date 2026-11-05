@@ -872,6 +872,7 @@ pub fn record(opts: &Options) -> Result<Summary> {
             .chain(opts.args.iter().cloned())
             .collect(),
         sha256: None,
+        load_base: None,
     };
     let mut header = Header::new(
         format!("statesolver-record {}", env!("CARGO_PKG_VERSION")),

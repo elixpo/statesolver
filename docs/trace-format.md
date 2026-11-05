@@ -37,6 +37,7 @@ Every event has an `id` (0, 1, 2, … with no gaps, written `E<id>`) and an `ev`
 | `free` | `alloc`, `addr`, `epoch`, `caller` | A heap object ends |
 | `signal` | `signo`, `code`, `addr?`, `pc`, `fatal` | Signal delivery. `fatal: true` ends the trace |
 | `nondet` | `pc`, `insn`, `values: [[reg, u64]]` | A non-deterministic instruction (`rdtsc`, `rdtscp`) trapped and emulated by the recorder; replay writes the same values |
+| `sanitizer` | `kind`, `addr`, `size`, `pc` | AddressSanitizer caught a memory error (`load`, `store`, `double-free`, `bad-free`, `generic`) before the access happened; derived by the replay index from ASan's report hooks |
 | `mark` | `label`, `pc` | Ground-truth or user marker (`ss_mark("…")` in the bug corpus) |
 | `exit` | `code` | Normal exit, which ends the trace |
 

@@ -230,6 +230,7 @@ impl Validator {
             | EventKind::Signal { .. }
             | EventKind::Mark { .. }
             | EventKind::Nondet { .. }
+            | EventKind::Sanitizer { .. }
             | EventKind::Exit { .. } => {}
         }
         out

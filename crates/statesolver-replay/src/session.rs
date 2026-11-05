@@ -392,7 +392,8 @@ impl Session {
     pub fn maps(&self) -> Result<String> {
         let rr = self.rr.id();
         let path = format!("/proc/{rr}/task/{rr}/children");
-        let children = std::fs::read_to_string(&path).map_err(|e| Error::Protocol(format!("{path}: {e}")))?;
+        let children =
+            std::fs::read_to_string(&path).map_err(|e| Error::Protocol(format!("{path}: {e}")))?;
         let pid = children
             .split_whitespace()
             .next()

@@ -113,9 +113,10 @@ def fn(name: str, desc: str, props: dict, required: list[str]) -> dict:
 class Common:
     """Source and symbol tools shared by every arm."""
 
-    def __init__(self, src: Path, exe: Path):
+    def __init__(self, src: Path, exe: Path, load_base: int = 0):
         self.src = src.resolve()
         self.exe = exe
+        self.load_base = load_base
 
     def tools(self) -> list[dict]:
         return [
@@ -143,11 +144,20 @@ class Common:
             end = min(len(lines), int(a.get("end") or start + 199))
             return "\n".join(f"{i:5}  {lines[i - 1]}" for i in range(start, end + 1))
         if name == "addr2line":
-            out = subprocess.run(["addr2line", "-f", "-C", "-i", "-e", str(self.exe), a["addr"]],
-                                 capture_output=True, text=True, timeout=20).stdout.strip()
+            addr = int(str(a["addr"]), 0)
+            # Position-independent executables: runtime address minus load base.
+            if self.load_base and addr >= self.load_base:
+                addr -= self.load_base
+            sym = REPO / "study/data/llvm-symbolizer"
+            if sym.exists():  # handles clang's DWARF 5, unlike binutils addr2line
+                cmd = [str(sym), "--inlines", "--demangle", f"--obj={self.exe}", hex(addr)]
+            else:
+                cmd = ["addr2line", "-f", "-C", "-i", "-e", str(self.exe), hex(addr)]
+            out = subprocess.run(cmd, capture_output=True, text=True, timeout=20).stdout.strip()
+            out = re.sub(r":(\d+):\d+$", r":\1", out, flags=re.M)
             # Report paths relative to the source root, whatever the build path was.
             out = re.sub(r"(?m)^/\S*?/src/", "", out.replace(str(self.src) + "/", ""))
-            if not out or out.startswith("??"):
+            if not out or out.startswith("??") or out.endswith(":0"):
                 return f"{a['addr']}: not in the program's own code (likely a shared library such as libc)"
             return out
         return None
@@ -260,7 +270,7 @@ class RawGdb:
 # The agent loop
 # ----------------------------------------------------------------------------
 
-def trace_facts(trace: Path) -> tuple[str, Path, str]:
+def trace_facts(trace: Path) -> tuple[str, Path, str, int]:
     """Program path and outcome from the trace's StateSolver index."""
     binary = REPO / "target/release/statesolver"
     subprocess.run([str(binary), "index", str(trace)], capture_output=True, check=True)
@@ -268,7 +278,8 @@ def trace_facts(trace: Path) -> tuple[str, Path, str]:
     out = subprocess.run([str(binary), "trace", "stats", str(trace)], capture_output=True, text=True).stdout
     program = re.search(r"^program\s+(\S+)", out, re.M).group(1)
     term = re.search(r"^terminated\s+(.*)$", out, re.M).group(1)
-    return program, Path(program), term
+    base = re.search(r"^load base\s+(0x[0-9a-f]+)", out, re.M)
+    return program, Path(program), term, int(base.group(1), 16) if base else 0
 
 
 def parse_final(text: str) -> dict | None:
@@ -283,8 +294,8 @@ def parse_final(text: str) -> dict | None:
 
 def run(args: argparse.Namespace) -> dict:
     trace = Path(args.trace).resolve()
-    program, exe, outcome = trace_facts(trace)
-    common = Common(Path(args.src), exe)
+    program, exe, outcome, load_base = trace_facts(trace)
+    common = Common(Path(args.src), exe, load_base)
     if args.arm == "A1":
         backend = RawGdb(trace, exe)
     elif args.arm in ("A4", "A5"):
