@@ -4,7 +4,7 @@ pack, copy out source and patch, delete the image, index on the host.
 
     python3 study/pipeline.py jq.cve-2023-50246 [more ids...] \
         [--sanitizer address|none] [--asan-options quarantine_size_mb=0] \
-        [--out study/bugs] [--keep-image]
+        [--out study/bugs] [--keep-image] [--memory 3g]
 
 Output per instance (study/bugs/<id>/):
     trace/        packed rr trace (replayable on the host)
@@ -109,7 +109,7 @@ echo OK
 """
 
 
-def run_one(inst: dict, out_root: Path, sanitizer: str, asan_options: str, keep: bool) -> dict:
+def run_one(inst: dict, out_root: Path, sanitizer: str, asan_options: str, keep: bool, memory: str = "3g") -> dict:
     iid = inst["instance_id"]
     out = out_root / iid
     meta = {"instance_id": iid, "project": inst["project_name"], "sanitizer": sanitizer,
@@ -145,12 +145,17 @@ def run_one(inst: dict, out_root: Path, sanitizer: str, asan_options: str, keep:
                           cwd=shlex.quote(cwd or inst["work_dir"]), cmd_q=shlex.quote(cmd), cmd=cmd,
                           asan_options=shlex.quote(asan_options), uid=os.getuid(), gid=os.getgid())
     t1 = time.time()
-    r = sh(["docker", "run", "--rm", "--memory=5g", f"--cpuset-cpus={performance_core()}",
+    # A hard memory cap with no extra swap: an oversized build gets the
+    # container OOM-killed (recorded as a failure), not the host.
+    r = sh(["docker", "run", "--rm", f"--memory={memory}", f"--memory-swap={memory}",
+            f"--cpuset-cpus={performance_core()}",
             "--cap-add=SYS_PTRACE", "--security-opt", "seccomp=unconfined",
             "-v", f"{out.resolve()}:/out", "-v", f"{RR_DEB.resolve()}:/rr/rr.deb:ro",
             "--entrypoint", "bash", img, "-c", script], capture_output=True)
     meta["container_s"] = round(time.time() - t1, 1)
     meta["container_status"] = (r.stdout.strip().splitlines() or ["?"])[-1]
+    if r.returncode == 137:
+        meta["container_status"] = f"OOM-killed (container memory cap {memory})"
     if not keep:
         sh(["docker", "rmi", "-f", img], capture_output=True)
         sh(["docker", "image", "prune", "-f"], capture_output=True)
@@ -177,6 +182,7 @@ def main() -> None:
     ap.add_argument("--asan-options", default="detect_leaks=0")
     ap.add_argument("--out", default=str(REPO / "study/bugs"))
     ap.add_argument("--keep-image", action="store_true")
+    ap.add_argument("--memory", default="3g", help="container memory cap (no extra swap)")
     a = ap.parse_args()
     ensure_rr_deb()
     db = instances()
@@ -185,7 +191,7 @@ def main() -> None:
         if iid not in db:
             print(f"{iid}: unknown instance id")
             continue
-        meta = run_one(db[iid], out_root, a.sanitizer, a.asan_options, a.keep_image)
+        meta = run_one(db[iid], out_root, a.sanitizer, a.asan_options, a.keep_image, a.memory)
         (out_root / iid).mkdir(parents=True, exist_ok=True)
         (out_root / iid / "meta.json").write_text(json.dumps(meta, indent=2))
         with open(out_root / "manifest.jsonl", "a") as m:
