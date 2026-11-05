@@ -148,7 +148,7 @@ impl Indexer<'_> {
 
     fn at_entry(&mut self, exe: &str) -> Result<()> {
         let maps = symbols::parse_maps(&self.s.maps()?);
-        let mut found: HashMap<String, u64> = HashMap::new();
+        let mut found: HashMap<String, (u8, u64)> = HashMap::new();
         let names: Vec<&str> = ALLOCATOR
             .iter()
             .map(|(n, _)| *n)
@@ -159,20 +159,31 @@ impl Indexer<'_> {
                 continue;
             }
             if let Ok(syms) = symbols::resolve(&image, &names) {
-                let prefer = image.path.contains("libc.so") || image.path == exe;
+                // The executable's own allocator wins (ASan and custom
+                // allocators interpose malloc there), then libc, then others.
+                let rank = if image.path == exe {
+                    0
+                } else if image.path.contains("libc.so") {
+                    1
+                } else {
+                    2
+                };
                 for (name, addr) in syms {
-                    if prefer || !found.contains_key(&name) {
-                        found.insert(name, addr);
+                    match found.get(&name) {
+                        Some(&(r, _)) if r <= rank => {}
+                        _ => {
+                            found.insert(name, (rank, addr));
+                        }
                     }
                 }
             }
         }
         for (name, kind) in ALLOCATOR {
-            if let Some(&a) = found.get(name) {
+            if let Some(&(_, a)) = found.get(name) {
                 self.bp(a, kind)?;
             }
         }
-        if let Some(&a) = found.get("ss_mark") {
+        if let Some(&(_, a)) = found.get("ss_mark") {
             self.bp(a, Kind::Mark)?;
         }
         Ok(())
