@@ -49,7 +49,9 @@ def main() -> None:
     for bug in bugs:
         meta = Path(a.bugs_dir) / bug / "meta.json"
         status = json.loads(meta.read_text()).get("status") if meta.exists() else "not recorded"
-        if status != "ok":
+        trace = Path(a.bugs_dir) / bug / "trace"
+        indexed = (trace / "statesolver-index.ss").exists() and not (trace / "incomplete").exists()
+        if status != "ok" and not (status == "already recorded" and indexed):
             print(f"skip {bug}: {status}")
             continue
         for arm in a.arms.split(","):
