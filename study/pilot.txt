@@ -1,7 +1,6 @@
 libxml2.ossfuzz-42484562
 libxml2.ossfuzz-42486665
 libxml2.ossfuzz-42537493
-libxml2.ossfuzz-42529030
 mruby.cve-2022-1934
 mruby.ossfuzz-42511322
 mruby.cve-2022-1212

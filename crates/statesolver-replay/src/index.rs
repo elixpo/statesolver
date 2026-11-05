@@ -22,6 +22,7 @@ use crate::{Error, Result};
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Kind {
     Malloc,
+    New,
     Calloc,
     Realloc,
     Free,
@@ -89,7 +90,20 @@ struct Pending {
     return_rsp: u64,
 }
 
-const ALLOCATOR: [(&str, Kind); 7] = [
+const ALLOCATOR: [(&str, Kind); 19] = [
+    // C++ operator new/delete (ASan defines them in the executable).
+    ("_Znwm", Kind::New),
+    ("_Znam", Kind::New),
+    ("_ZnwmRKSt9nothrow_t", Kind::New),
+    ("_ZnamRKSt9nothrow_t", Kind::New),
+    ("_ZnwmSt11align_val_t", Kind::New),
+    ("_ZnamSt11align_val_t", Kind::New),
+    ("_ZdlPv", Kind::Free),
+    ("_ZdaPv", Kind::Free),
+    ("_ZdlPvm", Kind::Free),
+    ("_ZdaPvm", Kind::Free),
+    ("_ZdlPvSt11align_val_t", Kind::Free),
+    ("_ZdaPvSt11align_val_t", Kind::Free),
     ("malloc", Kind::Malloc),
     ("calloc", Kind::Calloc),
     ("realloc", Kind::Realloc),
@@ -331,7 +345,7 @@ impl Indexer<'_> {
                     self.s.reg(Reg::Rdx)?,
                 );
                 let (size, ptr_in, memptr) = match kind {
-                    Kind::Malloc => (rdi, 0, 0),
+                    Kind::Malloc | Kind::New => (rdi, 0, 0),
                     Kind::Calloc => (rdi.saturating_mul(rsi), 0, 0),
                     Kind::Realloc => (rsi, rdi, 0),
                     Kind::Aligned => (rsi, 0, 0),
@@ -356,6 +370,9 @@ impl Indexer<'_> {
         match p.kind {
             Kind::Malloc if rax != 0 => {
                 self.alloc(rax, p.size, AllocKind::Malloc, None, p.caller)?;
+            }
+            Kind::New if rax != 0 => {
+                self.alloc(rax, p.size, AllocKind::New, None, p.caller)?;
             }
             Kind::Calloc if rax != 0 => {
                 self.alloc(rax, p.size, AllocKind::Calloc, None, p.caller)?;

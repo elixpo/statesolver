@@ -202,6 +202,8 @@ pub enum AllocKind {
     Aligned,
     /// Direct anonymous `mmap` treated as an allocation.
     Mmap,
+    /// C++ `operator new` / `operator new[]` (including nothrow and aligned).
+    New,
 }
 
 /// Kind of address-space change.

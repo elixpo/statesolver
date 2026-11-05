@@ -6,6 +6,16 @@ MorphStack's log is archived at [docs/archive/morphstack/DISCOVERIES.md](docs/ar
 
 ---
 
+## 2026-11-06: Pilot recordings complete (20/20); three pre-pilot corrections
+
+- **Recording:** all 20 pilot bugs were recorded under rr in their containers and indexed on the host (17–77 MB per trace, about 800 MB total). Two infrastructure failures along the way:
+  1. A gpac build OOM-killed the 7 GB laptop. Containers now have a hard 3 GB cap with no extra swap.
+  2. A reboot reset `kernel.perf_event_paranoid` to 4, so rr failed to record. The setting is now persistent in `/etc/sysctl.d/10-rr.conf`, and the pipeline refuses to start without it.
+- **Corrections before any agent run:**
+  1. **C++ allocations were invisible.** ASan defines `operator new`/`delete` in the executable, and the index hooked only `malloc`/`free`. With the new/delete hooks: libheif went from 6 to 371 allocations, qpdf from 4,365 to 67,013, and exiv2 from 8 to 538. Without this fix, arm A4 would have been blind on its C++ use-after-free bugs.
+  2. **`libxml2.ossfuzz-42529030` does not reproduce in our build** (it prints `<root/>` and exits 0). It is excluded, so **the pilot has 19 bugs**.
+  3. **`exiv2.cve-2017-14857` reproduces as a heap-buffer-overflow** in `Exiv2::FileIo::read`, before the bad free in SEC-bench's report. Its class label follows the recording; the root lines (from the fix commit) are unchanged.
+
 ## 2026-11-05: Fix-commit ground truth frozen; ASan-report-only (A0) solves jq exactly, so A0 joins the pilot
 
 - **Ground truth:** `study/ground_truth.py` derives root-cause lines from each developer fix: the vulnerable-file lines the fix deletes or modifies, or the anchor line before a pure insertion. Labels for the 20 pilot bugs are committed in `study/labels/` **before any pilot run**. Fix sizes range from 1 line (8 bugs) to 84 lines (libxml2-42537493), so results must be stratified by fix size.
