@@ -80,6 +80,28 @@ def poc_command(secb_sh: str) -> tuple[str | None, str]:
     return cmds[0], cwd
 
 
+def force_rmtree(path: Path) -> None:
+    """Remove a directory, including root-owned leftovers of a failed
+    container run, which a throwaway container can delete without sudo."""
+    import shutil
+    try:
+        shutil.rmtree(path)
+    except PermissionError:
+        sh(["docker", "run", "--rm", "-v", f"{path.parent.resolve()}:/w", "busybox",
+            "rm", "-rf", f"/w/{path.name}"], capture_output=True)
+        if path.exists():
+            raise
+
+
+def check_rr_environment() -> None:
+    """Fail fast instead of after several downloads."""
+    level = int(Path("/proc/sys/kernel/perf_event_paranoid").read_text().strip())
+    if level > 1:
+        sys.exit(f"kernel.perf_event_paranoid is {level}; rr needs <= 1:\n"
+                 "  sudo sysctl kernel.perf_event_paranoid=1\n"
+                 "  echo 'kernel.perf_event_paranoid = 1' | sudo tee /etc/sysctl.d/10-rr.conf")
+
+
 def ensure_rr_deb() -> None:
     if not RR_DEB.exists():
         DATA.mkdir(parents=True, exist_ok=True)
@@ -88,6 +110,8 @@ def ensure_rr_deb() -> None:
 
 INNER = r"""
 set -u
+# Hand outputs back to the host user on every exit path, including failures.
+trap 'chown -R {uid}:{gid} /out' EXIT
 cd {work_dir}
 export SANITIZER={sanitizer}
 # Line tables for source-level localization (SEC-bench builds ship without them).
@@ -124,8 +148,7 @@ def run_one(inst: dict, out_root: Path, sanitizer: str, asan_options: str, keep:
         return meta
     if trace_dir.exists():
         # A partial or unpacked trace from an interrupted run: start over.
-        import shutil
-        shutil.rmtree(trace_dir)
+        force_rmtree(trace_dir)
     out.mkdir(parents=True, exist_ok=True)
     (out / "patch.diff").write_text(inst["patch"])
     (out / "sanitizer_report.txt").write_text(inst.get("sanitizer_report") or "")
@@ -184,6 +207,7 @@ def main() -> None:
     ap.add_argument("--keep-image", action="store_true")
     ap.add_argument("--memory", default="3g", help="container memory cap (no extra swap)")
     a = ap.parse_args()
+    check_rr_environment()
     ensure_rr_deb()
     db = instances()
     out_root = Path(a.out)
