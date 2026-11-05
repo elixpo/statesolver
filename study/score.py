@@ -21,6 +21,7 @@ Per run:
   claims          number of claims in the final answer
   uncited         claims citing nothing
   bad_cites       citations to tool-result ids that do not exist in the run
+  invented_file   the reported root-cause file does not exist in the source
   tool_calls, tokens, seconds, answered (a parsable final answer exists)
 """
 
@@ -66,7 +67,7 @@ def same_loc(rep: dict | None, loc: list) -> bool:
     return rline == int(line) and (rfile == f or rfile.endswith("/" + f) or f.endswith("/" + rfile))
 
 
-def score_run(run: dict, gt: dict) -> dict:
+def score_run(run: dict, gt: dict, src: Path | None = None) -> dict:
     final = run.get("final") or {}
     rc = final.get("root_cause")
     ids = {e["id"] for e in run.get("log", []) if "id" in e}
@@ -87,6 +88,8 @@ def score_run(run: dict, gt: dict) -> dict:
         "root_hit": any(same_loc(rc, l) for l in gt["root"]),
         "chain_hit": any(same_loc(rc, l) for l in gt["root"] + gt.get("chain", [])),
         "said_crash": same_loc(rc, gt["crash"]) and not any(same_loc(rc, l) for l in gt["root"]),
+        "invented_file": bool(src and isinstance(rc, dict) and rc.get("file")
+                              and not (src / str(rc["file"]).lstrip("/")).exists()),
         "claims": len(claims),
         "uncited": uncited,
         "bad_cites": bad,
@@ -107,20 +110,22 @@ def main() -> None:
         gt = ground_truth(bug)
         if gt is None:
             continue
-        rows.append({"bug": bug, "arm": arm, "model": model, "seed": f.stem, **score_run(json.loads(f.read_text()), gt)})
+        run = json.loads(f.read_text())
+        src = Path(run["src"]) if run.get("src") else None
+        rows.append({"bug": bug, "arm": arm, "model": model, "seed": f.stem, **score_run(run, gt, src)})
     if a.json:
         print(json.dumps(rows, indent=2))
         return
     agg = defaultdict(list)
     for r in rows:
         agg[(r["arm"], r["model"])].append(r)
-    print(f"{'arm':<4} {'model':<12} {'runs':>4} {'class':>6} {'root':>6} {'chain':>6} {'crash':>6} {'uncited':>8} {'badcite':>8} {'calls':>6} {'ktok':>7}")
+    print(f"{'arm':<4} {'model':<12} {'runs':>4} {'class':>6} {'root':>6} {'chain':>6} {'crash':>6} {'invent':>6} {'uncited':>8} {'badcite':>8} {'calls':>6} {'ktok':>7}")
     for (arm, model), rs in sorted(agg.items()):
         n = len(rs)
         rate = lambda k: f"{sum(r[k] for r in rs) / n:.0%}"
         mean = lambda k: sum(r[k] for r in rs) / n
         print(f"{arm:<4} {model:<12} {n:>4} {rate('class_ok'):>6} {rate('root_hit'):>6} {rate('chain_hit'):>6} "
-              f"{rate('said_crash'):>6} {mean('uncited'):>8.1f} {mean('bad_cites'):>8.1f} {mean('tool_calls'):>6.1f} {mean('tokens') / 1000:>7.1f}")
+              f"{rate('said_crash'):>6} {rate('invented_file'):>6} {mean('uncited'):>8.1f} {mean('bad_cites'):>8.1f} {mean('tool_calls'):>6.1f} {mean('tokens') / 1000:>7.1f}")
 
 
 if __name__ == "__main__":

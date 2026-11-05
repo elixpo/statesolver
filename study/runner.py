@@ -298,14 +298,17 @@ def run(args: argparse.Namespace) -> dict:
     log, usage, t_id, final = [], {"prompt_tokens": 0, "completion_tokens": 0}, 0, None
     started = time.time()
     try:
-        for step in range(args.max_steps + 1):
-            force_answer = step == args.max_steps
+        step = 0
+        while True:
+            force_answer = t_id >= args.max_calls
+            # Tools stay defined on every request (some providers require it
+            # once tool messages exist); the final turn only disables them.
             body = {"model": args.model, "messages": messages, "temperature": args.temperature,
-                    "seed": args.seed, "max_tokens": 2000}
-            if not force_answer:
-                body["tools"] = tools
-            else:
+                    "seed": args.seed, "max_tokens": 2000, "tools": tools}
+            if force_answer:
+                body["tool_choice"] = "none"
                 messages.append({"role": "user", "content": "Tool budget exhausted. Give your final JSON answer now."})
+            step += 1
             r = chat(key, body)
             for k in usage:
                 usage[k] += (r.get("usage") or {}).get(k, 0) or 0
@@ -313,9 +316,11 @@ def run(args: argparse.Namespace) -> dict:
             calls = msg.get("tool_calls") or []
             messages.append({k: v for k, v in msg.items() if k in ("role", "content", "tool_calls")})
             log.append({"step": step, "assistant": msg.get("content"), "tool_calls": calls})
-            if not calls:
+            if not calls or force_answer:
                 final = parse_final(msg.get("content") or "")
                 break
+            # Calls beyond the budget are not executed.
+            calls = calls[: max(0, args.max_calls - t_id)]
             for c in calls:
                 t_id += 1
                 name = c["function"]["name"]
@@ -334,8 +339,8 @@ def run(args: argparse.Namespace) -> dict:
     finally:
         backend.close()
     return {
-        "trace": str(trace), "arm": args.arm, "model": args.model, "seed": args.seed,
-        "max_steps": args.max_steps, "tool_calls": t_id, "usage": usage,
+        "trace": str(trace), "src": str(Path(args.src).resolve()), "arm": args.arm, "model": args.model, "seed": args.seed,
+        "max_calls": args.max_calls, "tool_calls": t_id, "usage": usage,
         "seconds": round(time.time() - started, 1), "final": final, "log": log,
     }
 
@@ -348,7 +353,7 @@ def main() -> None:
     p.add_argument("--model", default="nova-fast")
     p.add_argument("--seed", type=int, default=1)
     p.add_argument("--temperature", type=float, default=0.2)
-    p.add_argument("--max-steps", type=int, default=25)
+    p.add_argument("--max-calls", type=int, default=30, help="total tool-call budget (same in every arm)")
     p.add_argument("--out", required=True)
     args = p.parse_args()
     random.seed(args.seed)
