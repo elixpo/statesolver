@@ -114,9 +114,18 @@ def run_one(inst: dict, out_root: Path, sanitizer: str, asan_options: str, keep:
     out = out_root / iid
     meta = {"instance_id": iid, "project": inst["project_name"], "sanitizer": sanitizer,
             "asan_options": asan_options, "started": time.strftime("%Y-%m-%dT%H:%M:%S")}
-    if (out / "trace").exists():
-        meta["status"] = "already recorded"
+    trace_dir = out / "trace"
+    if trace_dir.exists() and not (trace_dir / "incomplete").exists() and any(trace_dir.glob("mmap_pack_*")):
+        # Keep the original metadata (timings, status) instead of a stub.
+        prev = out / "meta.json"
+        meta = json.loads(prev.read_text()) if prev.exists() else meta
+        meta["skipped_again"] = time.strftime("%Y-%m-%dT%H:%M:%S")
+        meta.setdefault("status", "already recorded")
         return meta
+    if trace_dir.exists():
+        # A partial or unpacked trace from an interrupted run: start over.
+        import shutil
+        shutil.rmtree(trace_dir)
     out.mkdir(parents=True, exist_ok=True)
     (out / "patch.diff").write_text(inst["patch"])
     (out / "sanitizer_report.txt").write_text(inst.get("sanitizer_report") or "")
