@@ -6,6 +6,27 @@ MorphStack's log is archived at [docs/archive/morphstack/DISCOVERIES.md](docs/ar
 
 ---
 
+## 2026-11-05: First real CVE explained correctly; ASan support, loop collapse, and three benchmark gotchas
+
+- **Real CVE:** on SEC-bench `jq` CVE-2023-50246 (an ASan build recorded inside its container and replayed on the host), `explain-crash` reports *heap-buffer-overflow: a pointer into live Allocation #5676 (328 bytes) accessed offset 328, 0 bytes past its end*. It traces the pointer back across functions to the allocation. The developer fix changes `digits + 14` to `digits + 15` in the allocation size, which agrees.
+- **ASan:** instrumented code calls `__asan_report_{load,store}N(addr)` **instead of** the bad access, so the index hooks those (plus `ReportGenericError`, `ReportDoubleFree`, and `ReportFreeNotMalloced`) and records a `sanitizer` event at the exact access. The address is in `rdi`, which makes it a natural provenance start. ASan's `malloc`/`free` live in the executable, so the executable's allocator takes priority over libc's.
+- **Loop collapse:** real chains run through cursor loops (`*c++ = …`), which used up the 16-hop cap. Skipping writes by instructions already on the chain, plus writes of the form "old value ± small delta" (cursor steps, which `before`/`after` already record), reached the allocation after skipping exactly 328 cursor steps, one per byte written.
+- **Benchmark gotchas:**
+  1. SEC-bench builds have **no line tables** (even ASan's report shows no lines), so the pipeline now builds with `-gline-tables-only`.
+  2. Clang emits DWARF 5, which binutils `addr2line` cannot read, so the runner uses `llvm-symbolizer` (taken from the packed trace).
+  3. PIE binaries need the load base subtracted before symbolizing, so the index now records `load_base`.
+- **Open:** allocation call sites often land in wrappers (`jv_mem_alloc`), so the index should record a short allocation call stack.
+
+## 2026-11-05: Smoke runs (instrument checks, n = 1 per cell, not results)
+
+- On bug 001, `qwen-coder` placed the root cause on the causal chain in A4 and A5 (line 45, the stale write) and at line 37 (the `logout()` call) in A1. With the same model, **A1 used 91k tokens and 386 s and exhausted the 30-call budget, against A4's 25k tokens and 77 s**. `nova-fast` mostly failed (no answer in A1; a wrong line in A4). **`qwen-coder` becomes the primary pilot model.**
+- No arm hit the strict root (line 28, the `free` in `logout()`). Ground truth stays as it was written before the runs; changing it after seeing outputs would bias the study.
+- **Instrument fixes found by smoke runs:**
+  - Decimal addresses were misread by the agent as hex, so tool output now uses hex.
+  - The tool budget counted turns, not calls, so it now counts total tool calls.
+  - Bedrock-backed models require tool definitions on the forced final turn, so the final turn keeps them with `tool_choice: none`.
+  - An A1 run invented a nonexistent source file, which the scorer now flags.
+
 ## 2026-11-05: A real benchmark bug records under rr on the laptop; ASan is manageable
 
 - **Finding:** SEC-bench `jq` was reproduced and recorded end to end on this laptop: pull the image, `secb build` (41 s), `secb repro`, then `rr record` and `rr pack` inside the container (26 MB). The container runs with `--cap-add=SYS_PTRACE --security-opt seccomp=unconfined` and is pinned to a P-core. Details are in [docs/study/benchmarks.md](docs/study/benchmarks.md).
