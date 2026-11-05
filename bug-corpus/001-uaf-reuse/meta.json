@@ -1,1 +1,34 @@
-{"class": "uaf-reuse", "reuse": true, "real_world": false, "expected_signal": "SIGSEGV", "language": "c"}
+{
+  "class": "uaf-reuse",
+  "reuse": true,
+  "real_world": false,
+  "expected_signal": "SIGSEGV",
+  "language": "c",
+  "ground_truth": {
+    "class": "use-after-free",
+    "root": [
+      [
+        "main.c",
+        28
+      ]
+    ],
+    "chain": [
+      [
+        "main.c",
+        35
+      ],
+      [
+        "main.c",
+        45
+      ],
+      [
+        "main.c",
+        46
+      ]
+    ],
+    "crash": [
+      "main.c",
+      48
+    ]
+  }
+}

@@ -1,1 +1,30 @@
-{"class": "double-free", "reuse": false, "real_world": false, "expected_signal": "SIGABRT", "language": "c"}
+{
+  "class": "double-free",
+  "reuse": false,
+  "real_world": false,
+  "expected_signal": "SIGABRT",
+  "language": "c",
+  "ground_truth": {
+    "class": "double-free",
+    "root": [
+      [
+        "main.c",
+        15
+      ]
+    ],
+    "chain": [
+      [
+        "main.c",
+        18
+      ],
+      [
+        "main.c",
+        28
+      ]
+    ],
+    "crash": [
+      "main.c",
+      28
+    ]
+  }
+}

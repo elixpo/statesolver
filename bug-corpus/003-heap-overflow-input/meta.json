@@ -1,1 +1,27 @@
-{"class": "heap-overflow-external-input", "reuse": false, "real_world": false, "expected_signal": "SIGSEGV", "stdin": "input/overflow.bin", "language": "c"}
+{
+  "class": "heap-overflow-external-input",
+  "reuse": false,
+  "real_world": false,
+  "expected_signal": "SIGSEGV",
+  "stdin": "input/overflow.bin",
+  "language": "c",
+  "ground_truth": {
+    "class": "heap-buffer-overflow",
+    "root": [
+      [
+        "main.c",
+        26
+      ]
+    ],
+    "chain": [
+      [
+        "main.c",
+        27
+      ]
+    ],
+    "crash": [
+      "main.c",
+      29
+    ]
+  }
+}
