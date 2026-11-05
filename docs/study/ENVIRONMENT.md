@@ -1,6 +1,8 @@
 # Study environment: what is needed before the pilot (#4)
 
-Status as of 2026-11-04. Everything below is needed for the **agent runs**. Building the MCP server and the study harness does not need any of it.
+Status as of 2026-11-05: **laptop-scale plan adopted** (see DIRECTION.md, Changes). About 74 GB was freed (Rust build outputs and unused Docker data), so **92 GB is free**, which is enough for the one-bug-at-a-time pipeline. Still open: the model provider and budget, and a second annotator.
+
+Original assessment (2026-11-04): Everything below is needed for the **agent runs**. Building the MCP server and the study harness does not need any of it.
 
 ## 1. Model access (maintainer)
 

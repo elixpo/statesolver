@@ -6,6 +6,12 @@ MorphStack's log is archived at [docs/archive/morphstack/DISCOVERIES.md](docs/ar
 
 ---
 
+## 2026-11-05: No big machine, but the laptop has the rare resource; the study is scaled to it
+
+- **Finding:** the constraint was disk (13 GB free), not the machine class. This laptop has a working PMU, which most cloud VMs lack and rr needs for both recording and replay. Cleaning regenerable Rust build outputs (about 49 GB in 7 workspace copies) and unused Docker images and build cache (about 28 GB) freed about 74 GB, leaving 92 GB free.
+- **Decision:** a laptop-scale study (DIRECTION.md, Changes): a one-bug-at-a-time pipeline, 40–60 real bugs in small and medium projects, fewer models, and serial overnight batches. The direction, claim, arms, and pilot gate are unchanged.
+- **Threat to validity to report:** benchmark size and the bias toward projects that build in 6 GB of RAM.
+
 ## 2026-11-04: explain-crash classifies all three corpus bugs correctly with one lifetime-aware rule
 
 - **Rule:** for the write that produced the crashing value, compare the allocation its **address pointer came from** (provenance origin) with the allocation that **owned the address** at that moment:

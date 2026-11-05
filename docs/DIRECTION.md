@@ -109,3 +109,7 @@ We add our own root-cause annotation layer (guideline, two annotators, κ, relea
   - rr replaces the custom recorder and replayer;
   - allocation epochs are derived during replay instead of recorded;
   - the paper is an agent study, with lifetime-aware slicing as the measured ingredient.
+- 2026-11-05: **scope adjustment (laptop-scale study)**, not a change of direction. No larger machine is available. The development laptop has what rr needs (a working PMU), but limited RAM (6 GB) and disk. Changes:
+  - **Pipeline:** one benchmark bug at a time: pull, build, `rr record`, `rr pack`, delete the image. Disk stays at about 10–20 GB; batches run serially and overnight.
+  - **Benchmark:** about 40–60 real bugs, chosen from SEC-bench and T2L-ARVO cases in small and medium projects that build in 6 GB RAM, instead of about 300. The pilot gate (about 20 bugs) is unchanged. The size is stated as a limitation.
+  - **Models:** 1 for the pilot and 2–3 for the paper (at least one open-weight), with Pollinations to be evaluated as a low-cost provider.
