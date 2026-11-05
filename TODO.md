@@ -54,7 +54,10 @@ Findings go in [DISCOVERIES.md](DISCOVERIES.md).
 - [x] `statesolver mcp TRACE [--address-only]`: MCP over stdio. Tools: trace_summary, events, explain_crash, why, last_writer, state, plus allocations and lifetime (arm A4 only). Every result is stamped `Q<n>`, with evidence ids `Q<n>.F<k>`; ground-truth `ss_mark` labels are hidden; arm A5 output is tested to contain no allocation or epoch information
 - [ ] HYPOTHESIS tier and the claim-citation protocol for arms that are not StateSolver (A0–A3)
 - [ ] Rare flake: `Session::start` occasionally fails in the rr test suite (1 in about 10 runs); investigate (port race or rr startup)
-- [ ] Arms A0–A5 with matched budgets; Crumb runner plus one other harness; 3 or more models
+- [x] `study/runner.py`: a minimal, auditable agent loop (stdlib Python, OpenAI-compatible Pollinations API). Identical prompt, budget, and common tools (`read_file`, `list_dir`, `addr2line`) in every arm; every tool result stamped `[T<n>]`; JSON final answer with cited claims. Arms A1 (raw gdb on rr replay), A4 (`statesolver mcp`), and A5 (`--address-only`) implemented
+- [ ] Arms A0 (ASan report only), A2 (shell plus rr), A3 (raw rr plus scripted summaries)
+- [ ] Benchmark sources shown to agents must be hint-free (no ground-truth markers or bug comments)
+- [ ] Crumb integration as a product feature (`statesolver mcp` in Crumb), separate from the study runner
 - [ ] SEC-bench, ARVO/T2L-ARVO, and VulnLoc loaders; rr recording of each; annotation tooling with κ
 - [ ] Arm-blind claim checker
 - [ ] **Pilot**: about 20 SEC-bench bugs, A1 against A4 (plus A5), with a go/adapt decision

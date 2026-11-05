@@ -103,8 +103,8 @@ impl Server {
     pub fn tools(&self) -> Vec<Value> {
         let mut t = vec![
             json!({"name": "trace_summary", "description": "Program, outcome, crash signal and pc, and event counts of the recorded execution.", "inputSchema": schema(&json!({}), &[])}),
-            json!({"name": "events", "description": "List recorded events (id, kind, rr position). Use ids as `event` arguments of other tools.", "inputSchema": schema(&json!({"kind": {"type": "string", "description": "Optional filter: alloc, free, syscall, signal, exit"}}), &[])}),
-            json!({"name": "explain_crash", "description": "Classify the crash and return a cited evidence chain (facts and inferences) with provenance chains.", "inputSchema": schema(&json!({}), &[])}),
+            json!({"name": "events", "description": "List recorded events (id, kind, details). Only these ids are valid `event` arguments for other tools; ids are not contiguous.", "inputSchema": schema(&json!({"kind": {"type": "string", "description": "Optional filter: alloc, free, syscall, signal, exit"}}), &[])}),
+            json!({"name": "explain_crash", "description": "START HERE. Automatically analyses the crash: finds the write that produced the bad value, traces where the involved pointer and value came from, and returns a classification with cited evidence (facts and inferences) and provenance chains.", "inputSchema": schema(&json!({}), &[])}),
             json!({"name": "why", "description": "Provenance chain of a register or 8-byte memory value at an event: which instructions produced it, back to its origin.", "inputSchema": schema(&json!({"event": {"type": "integer"}, "reg": {"type": "string"}, "addr": {"type": "string", "description": "hex address"}}), &["event"])}),
             json!({"name": "last_writer", "description": "The most recent instruction that wrote a memory location before an event (address, 1/2/4/8 bytes), with values before and after.", "inputSchema": schema(&json!({"event": {"type": "integer"}, "addr": {"type": "string"}, "len": {"type": "integer"}}), &["event", "addr"])}),
             json!({"name": "state", "description": "Registers, and optionally memory, at an event.", "inputSchema": schema(&json!({"event": {"type": "integer"}, "mem_addr": {"type": "string"}, "mem_len": {"type": "integer"}}), &["event"])}),
@@ -121,7 +121,16 @@ impl Server {
         self.next_query += 1;
         let q = format!("Q{}", self.next_query);
         match self.dispatch(name, args, &q) {
-            Ok(body) => text_result(&format!("[{q}] {body}"), false),
+            Ok(body) => {
+                // Addresses are shown in hex, as a debugger would.
+                let body = serde_json::from_str::<Value>(&body)
+                    .map(|mut v| {
+                        hexify(&mut v, None);
+                        serde_json::to_string_pretty(&v).unwrap_or_default()
+                    })
+                    .unwrap_or(body);
+                text_result(&format!("[{q}] {body}"), false)
+            }
             Err(e) => text_result(&format!("[{q}] error: {e}"), true),
         }
     }
@@ -382,6 +391,52 @@ impl Server {
     }
 }
 
+/// Field names whose integer values are addresses or raw machine words.
+const HEX_FIELDS: [&str; 9] = [
+    "addr",
+    "address",
+    "pc",
+    "sp",
+    "caller",
+    "value",
+    "start",
+    "end",
+    "realloc_of_addr",
+];
+
+/// Rewrite address-like integers as `0x…` strings, recursively.
+fn hexify(v: &mut Value, key: Option<&str>) {
+    match v {
+        Value::Object(m) => {
+            for (k, x) in m.iter_mut() {
+                hexify(x, Some(k));
+            }
+        }
+        Value::Array(a) => {
+            // Byte arrays (memory contents) become one hex string.
+            if matches!(key, Some("before" | "after"))
+                && a.iter().all(|x| x.as_u64().is_some_and(|b| b < 256))
+            {
+                let bytes: Vec<u8> = a
+                    .iter()
+                    .filter_map(|x| x.as_u64().and_then(|b| u8::try_from(b).ok()))
+                    .collect();
+                *v = Value::String(statesolver_trace::bytes::to_hex(&bytes));
+                return;
+            }
+            for x in a.iter_mut() {
+                hexify(x, key);
+            }
+        }
+        Value::Number(n) if key.is_some_and(|k| HEX_FIELDS.contains(&k)) => {
+            if let Some(x) = n.as_u64() {
+                *v = Value::String(format!("{x:#x}"));
+            }
+        }
+        _ => {}
+    }
+}
+
 /// Prefix bare evidence ids (`F3`, `I1`) in a summary with the query id.
 fn prefix_ids(text: &str, q: &str) -> String {
     let mut out = String::with_capacity(text.len());
@@ -453,6 +508,16 @@ mod tests {
         assert!(!names.contains(&"lifetime") && !names.contains(&"allocations"));
         let r = s.call("lifetime", &json!({"addr": "0x10"}));
         assert_eq!(r["isError"], true);
+    }
+
+    #[test]
+    fn addresses_are_rendered_in_hex() {
+        let mut v = json!({"addr": 4_199_108, "id": 3, "detail": {"pc": 255, "size": 32}, "before": [1, 255]});
+        hexify(&mut v, None);
+        assert_eq!(
+            v,
+            json!({"addr": "0x4012c4", "id": 3, "detail": {"pc": "0xff", "size": 32}, "before": "01ff"})
+        );
     }
 
     #[test]
