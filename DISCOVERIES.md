@@ -6,6 +6,17 @@ MorphStack's log is archived at [docs/archive/morphstack/DISCOVERIES.md](docs/ar
 
 ---
 
+## 2026-11-05: A real benchmark bug records under rr on the laptop; ASan is manageable
+
+- **Finding:** SEC-bench `jq` was reproduced and recorded end to end on this laptop: pull the image, `secb build` (41 s), `secb repro`, then `rr record` and `rr pack` inside the container (26 MB). The container runs with `--cap-add=SYS_PTRACE --security-opt seccomp=unconfined` and is pinned to a P-core. Details are in [docs/study/benchmarks.md](docs/study/benchmarks.md).
+- **Gotchas:**
+  - rr must be installed **inside** the container (the rr 5.9 release package). Bind-mounting the host rr breaks on library mismatches, and recording on the host fails because rr rejects `madvise(102)` on this kernel.
+  - `secb repro` exits 0 even when it crashes, so detect the ASan line instead.
+  - ARVO images run Ubuntu 16.04, which is too old for rr 5.9, so the fuzz target and PoC are copied into an Ubuntu 22.04 container.
+- **ASan:** both benchmarks build with ASan, and its quarantine stops freed chunks being reused. `-e SANITIZER=none` gives a plain build of the same commit for SEC-bench (verified on jq). `ASAN_OPTIONS=quarantine_size_mb=0` re-enables reuse without a rebuild. Both remain options for the 5-bug ASan test.
+- **Ground truth:** T2L-ARVO's line-level labels are not public (the linked repository returns 404). SEC-bench includes the developer fix patch for every instance, so fix-commit ground truth (the primary measure) is available for all of them.
+- **Pilot list:** 20 SEC-bench bugs across 13 projects: 12 use-after-free, 2 double free, 1 bad free, and 5 heap overflows. In 11 of the 15 lifetime bugs, the free is in a different file from the use: long causal chains.
+
 ## 2026-11-05: No big machine, but the laptop has the rare resource; the study is scaled to it
 
 - **Finding:** the constraint was disk (13 GB free), not the machine class. This laptop has a working PMU, which most cloud VMs lack and rr needs for both recording and replay. Cleaning regenerable Rust build outputs (about 49 GB in 7 workspace copies) and unused Docker images and build cache (about 28 GB) freed about 74 GB, leaving 92 GB free.
